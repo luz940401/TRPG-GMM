@@ -843,6 +843,29 @@ function applyImport(parsed) {
 
 document.getElementById('export-data-json-btn').addEventListener('click', exportDataJson);
 
+document.getElementById('reload-data-json-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('reload-data-json-btn');
+  const msg = document.getElementById('data-json-msg');
+  btn.textContent = '載入中...';
+  btn.disabled = true;
+  const loaded = await loadDataJson();
+  if (loaded) {
+    history = [];
+    activeNode = storyNodes.entrance ?? Object.values(storyNodes)[0];
+    populateTree();
+    renderScene(activeNode);
+    msg.style.display = '';
+    msg.style.color = '#4ade80';
+    msg.textContent = '✓ 成功載入最新資料！';
+  } else {
+    msg.style.display = '';
+    msg.style.color = '#f87171';
+    msg.textContent = '✗ 載入失敗，請確認 data.json 已上傳到 GitHub repo 根目錄';
+  }
+  btn.textContent = '重新從網站載入';
+  btn.disabled = false;
+});
+
 document.getElementById('sync-btn').addEventListener('click', () => {
   syncOut.value = JSON.stringify(storyNodes);
   syncIn.value  = '';

@@ -195,8 +195,13 @@ function buildMMLayout() {
     const n = { id, depth, parentId, title: storyNodes[id].title, children: [], x: 0, y: 0, leaves: 0 };
     nodeMap[id] = n; all.push(n);
     if (parentId) edges.push({ from: parentId, to: id, depth });
-    storyNodes[id].options.forEach(o => { if (o.next) build(o.next, id, depth + 1); });
-    n.children = storyNodes[id].options.filter(o => o.next && nodeMap[o.next]).map(o => o.next);
+    storyNodes[id].options.forEach(o => {
+      if (o.next) {
+        const wasVisited = visited.has(o.next);
+        build(o.next, id, depth + 1);
+        if (!wasVisited && nodeMap[o.next]) n.children.push(o.next);
+      }
+    });
   }
 
   const root = storyNodes.entrance ? 'entrance' : Object.keys(storyNodes)[0];
@@ -429,14 +434,14 @@ function exportDataJson() {
 async function loadDataJson() {
   try {
     const res = await fetch('./data.json?t=' + Date.now());
-    if (!res.ok) return false;
+    if (!res.ok) return { ok: false, error: `伺服器回應 ${res.status}` };
     const data = await res.json();
-    if (typeof data !== 'object' || Array.isArray(data)) return false;
+    if (typeof data !== 'object' || Array.isArray(data)) return { ok: false, error: '資料格式錯誤' };
     storyNodes = data;
     localStorage.setItem('trpg_nodes', JSON.stringify(storyNodes));
-    return true;
-  } catch {
-    return false;
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message || '網路連線失敗' };
   }
 }
 
@@ -794,7 +799,7 @@ async function pushToGist() {
 }
 
 async function loadFromGist() {
-  if (!ghToken || !ghGistId) return;
+  if (!ghToken || !ghGistId) return false;
   try {
     setSyncStatus('syncing');
     const res = await fetch(`${GH_API}/gists/${ghGistId}`, { headers: ghHeaders() });
@@ -809,8 +814,10 @@ async function loadFromGist() {
     populateTree();
     renderScene(activeNode);
     setSyncStatus('ok');
+    return true;
   } catch {
     setSyncStatus('error');
+    return false;
   }
 }
 
@@ -846,10 +853,10 @@ document.getElementById('export-data-json-btn').addEventListener('click', export
 document.getElementById('reload-data-json-btn').addEventListener('click', async () => {
   const btn = document.getElementById('reload-data-json-btn');
   const msg = document.getElementById('data-json-msg');
-  btn.textContent = '載入中...';
-  btn.disabled = true;
-  const loaded = await loadDataJson();
-  if (loaded) {
+
+  function applyDataJson(data) {
+    storyNodes = data;
+    localStorage.setItem('trpg_nodes', JSON.stringify(storyNodes));
     history = [];
     activeNode = storyNodes.entrance ?? Object.values(storyNodes)[0];
     populateTree();
@@ -857,10 +864,46 @@ document.getElementById('reload-data-json-btn').addEventListener('click', async 
     msg.style.display = '';
     msg.style.color = '#4ade80';
     msg.textContent = '✓ 成功載入最新資料！';
-  } else {
+  }
+
+  // file:// protocol — browser blocks fetch, use file picker instead
+  if (location.protocol === 'file:') {
     msg.style.display = '';
+    msg.style.color = '#94a3b8';
+    msg.textContent = '本機模式：請選取 data.json 檔案…';
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) { msg.style.display = 'none'; return; }
+      try {
+        const data = JSON.parse(await file.text());
+        if (typeof data !== 'object' || Array.isArray(data)) throw new Error('格式錯誤');
+        applyDataJson(data);
+      } catch (e) {
+        msg.style.color = '#f87171';
+        msg.textContent = `✗ 載入失敗：${e.message}`;
+      }
+    };
+    input.click();
+    return;
+  }
+
+  // http/https — fetch from server
+  btn.textContent = '載入中...';
+  btn.disabled = true;
+  msg.style.display = '';
+  msg.style.color = '#94a3b8';
+  msg.textContent = '正在抓取 ' + location.href.replace(/[^/]*$/, '') + 'data.json …';
+  const result = await loadDataJson();
+  if (result.ok) {
+    applyDataJson(storyNodes);
+    msg.style.color = '#4ade80';
+    msg.textContent = '✓ 成功載入最新資料！';
+  } else {
     msg.style.color = '#f87171';
-    msg.textContent = '✗ 載入失敗，請確認 data.json 已上傳到 GitHub repo 根目錄';
+    msg.textContent = `✗ 載入失敗：${result.error}`;
   }
   btn.textContent = '重新從網站載入';
   btn.disabled = false;
@@ -1090,16 +1133,19 @@ sceneDescription.addEventListener('blur', () => {
 populateTree();
 renderScene(activeNode);
 
-// Auto-load: Gist takes priority, then data.json, then localStorage
-if (ghToken && ghGistId) {
-  loadFromGist();
-} else {
-  loadDataJson().then(loaded => {
-    if (loaded) {
+// Auto-load: Gist → data.json (http only) → localStorage (fallback chain)
+(async () => {
+  if (ghToken && ghGistId) {
+    const ok = await loadFromGist();
+    if (ok) return;
+  }
+  if (location.protocol !== 'file:') {
+    const result = await loadDataJson();
+    if (result.ok) {
       history = [];
       activeNode = storyNodes.entrance ?? Object.values(storyNodes)[0];
       populateTree();
       renderScene(activeNode);
     }
-  });
-}
+  }
+})();

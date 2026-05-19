@@ -451,24 +451,77 @@ function stripTags(html) {
   return d.innerText;
 }
 
+function inlineFormat(text) {
+  let s = escHtml(text);
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\*([^*\n]+?)\*/g,  '<em>$1</em>');
+  s = s.replace(/_([^_\n]+?)_/g,    '<em>$1</em>');
+  s = s.replace(/`([^`\n]+?)`/g,    '<code class="paste-code">$1</code>');
+  return s;
+}
+
 function formatPaste(text) {
-  return text.trim()
-    .split(/\n{2,}/)
-    .filter(p => p.trim())
-    .map(para => {
-      const trimmed = para.trim();
-      // Detect heading: lines starting with # or ##
-      const headingMatch = trimmed.match(/^#{1,3} (.+)/);
-      if (headingMatch) {
-        return `<p class="paste-heading">${escHtml(headingMatch[1])}</p>`;
-      }
-      let html = escHtml(trimmed);
-      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      html = html.replace(/\*([^*\n]+?)\*/g,  '<em>$1</em>');
-      html = html.replace(/\n/g, '<br>');
-      return `<p>${html}</p>`;
-    })
-    .join('');
+  const lines = text.trim().split('\n');
+  const segs = [];
+  let cur = null;
+
+  function flush() { if (cur) { segs.push(cur); cur = null; } }
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+
+    // Heading  # / ## / ###
+    const hm = line.match(/^(#{1,3})\s+(.+)/);
+    if (hm) { flush(); segs.push({ type: 'h', level: hm[1].length, text: hm[2] }); continue; }
+
+    // Horizontal rule  --- / *** / ===
+    if (/^[-*=]{3,}\s*$/.test(line)) { flush(); segs.push({ type: 'hr' }); continue; }
+
+    // Blockquote  > text
+    const bq = line.match(/^>\s*(.*)/);
+    if (bq) {
+      if (cur?.type !== 'bq') { flush(); cur = { type: 'bq', lines: [] }; }
+      cur.lines.push(bq[1]);
+      continue;
+    }
+
+    // Bullet list  - / * / • (not **)
+    const bl = line.match(/^[-*•]\s+(?!\*)(.+)/);
+    if (bl) {
+      if (cur?.type !== 'ul') { flush(); cur = { type: 'ul', items: [] }; }
+      cur.items.push(bl[1]);
+      continue;
+    }
+
+    // Numbered list  1. / 2) etc.
+    const nl = line.match(/^\d+[.)]\s+(.+)/);
+    if (nl) {
+      if (cur?.type !== 'ol') { flush(); cur = { type: 'ol', items: [] }; }
+      cur.items.push(nl[1]);
+      continue;
+    }
+
+    // Empty line → end current block
+    if (!line.trim()) { flush(); continue; }
+
+    // Plain paragraph (join consecutive lines with <br>)
+    if (cur?.type === 'p') { cur.lines.push(line); }
+    else { flush(); cur = { type: 'p', lines: [line] }; }
+  }
+  flush();
+
+  return segs.map(seg => {
+    if (seg.type === 'h') {
+      const tag = ['h2','h3','h4'][seg.level - 1] || 'h4';
+      return `<${tag} class="paste-heading">${inlineFormat(seg.text)}</${tag}>`;
+    }
+    if (seg.type === 'hr')  return '<hr class="paste-hr">';
+    if (seg.type === 'ul')  return '<ul class="paste-list">'  + seg.items.map(i => `<li>${inlineFormat(i)}</li>`).join('') + '</ul>';
+    if (seg.type === 'ol')  return '<ol class="paste-list">'  + seg.items.map(i => `<li>${inlineFormat(i)}</li>`).join('') + '</ol>';
+    if (seg.type === 'bq')  return '<blockquote class="paste-bq">' + seg.lines.map(inlineFormat).join('<br>') + '</blockquote>';
+    if (seg.type === 'p')   return '<p>' + seg.lines.map(inlineFormat).join('<br>') + '</p>';
+    return '';
+  }).join('');
 }
 
 function escHtml(s) {

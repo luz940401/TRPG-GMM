@@ -128,6 +128,43 @@ textarea {
   letter-spacing: 0.04em;
 }
 
+.scene-text .paste-list,
+.notes-editor .paste-list {
+  margin: 0.4em 0 0.4em 1.4em;
+  padding: 0;
+}
+.scene-text .paste-list li,
+.notes-editor .paste-list li {
+  margin: 0.2em 0;
+  line-height: 1.6;
+}
+
+.scene-text .paste-hr,
+.notes-editor .paste-hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  margin: 0.8em 0;
+}
+
+.scene-text .paste-bq,
+.notes-editor .paste-bq {
+  border-left: 3px solid #8b5cf6;
+  margin: 0.5em 0;
+  padding: 0.3em 0.8em;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.scene-text .paste-code,
+.notes-editor .paste-code {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #7dd3fc;
+}
+
 .options-header,
 .drawer-header {
   display: flex;

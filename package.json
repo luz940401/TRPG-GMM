@@ -1,0 +1,10 @@
+{
+  "name": "trpg-dm-calculator",
+  "version": "13.0.0",
+  "private": true,
+  "description": "DM 專用 TRPG 自訂戰鬥計算表",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "test": "node scripts/check-project.mjs && node scripts/test-google-drive-sync.mjs"
+  }
+}

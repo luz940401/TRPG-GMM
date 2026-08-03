@@ -1,0 +1,2703 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRPG DM 自訂戰鬥計算表</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg1:#fff;--bg2:#f5f5f3;--bg3:#eeece8;
+  --t1:#1a1a18;--t2:#5a5a56;--t3:#9b9b97;
+  --bd1:rgba(0,0,0,.11);--bd2:rgba(0,0,0,.22);
+  --r-md:9px;--r-lg:14px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg1:#1e1e1c;--bg2:#252523;--bg3:#2a2a28;
+  --t1:#f0ede8;--t2:#a8a8a4;--t3:#6e6e6a;
+  --bd1:rgba(255,255,255,.1);--bd2:rgba(255,255,255,.2);
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--t1);font-size:16px;min-height:100vh;}
+.app{max-width:960px;margin:0 auto;padding:16px;}
+h1{font-size:20px;font-weight:600;margin-bottom:3px;}
+.sub{font-size:13px;color:var(--t2);margin-bottom:16px;}
+.tabs{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap;}
+.tab{font-size:15px;padding:8px 16px;border:.5px solid var(--bd1);border-radius:var(--r-md);background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;}
+.tab.on{background:var(--bg1);color:var(--t1);border-color:var(--bd2);font-weight:600;}
+.tab:hover:not(.on){background:var(--bg2);}
+.card{background:var(--bg1);border:.5px solid var(--bd1);border-radius:var(--r-lg);padding:15px 17px;margin-bottom:13px;}
+.inner{background:var(--bg2);border:.5px solid var(--bd1);border-radius:var(--r-md);padding:11px 13px;margin-top:10px;}
+.sec{font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:9px;}
+label.fl{font-size:13px;color:var(--t2);display:block;margin-bottom:4px;}
+input[type=text],input[type=number],select,textarea{
+  width:100%;font-size:15px;padding:7px 10px;
+  border:.5px solid var(--bd2);border-radius:var(--r-md);
+  background:var(--bg1);color:var(--t1);outline:none;
+}
+input:focus,select:focus,textarea:focus{border-color:#378ADD;box-shadow:0 0 0 2px #378add30;}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button{opacity:.4;}
+textarea{resize:vertical;min-height:44px;font-family:inherit;font-size:13px;}
+.btn{font-size:13px;font-weight:500;padding:7px 14px;border:.5px solid var(--bd2);border-radius:var(--r-md);background:transparent;color:var(--t1);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:hover{background:var(--bg2);}.btn:active{transform:scale(.97);}
+.btn-r{border-color:#F7C1C1;color:#791F1F;}.btn-r:hover{background:#FCEBEB;}
+.btn-b{border-color:#B5D4F4;color:#0C447C;}.btn-b:hover{background:#E6F1FB;}
+.btn-g{border-color:#C0DD97;color:#27500A;}.btn-g:hover{background:#EAF3DE;}
+.btn-o{border-color:#FAC775;color:#633806;}.btn-o:hover{background:#FAEEDA;}
+.btn-p{border-color:#C4B5FD;color:#4C3091;}.btn-p:hover{background:#F5F0FF;}
+.divider{border:none;border-top:.5px solid var(--bd1);margin:10px 0;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;}
+.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;}
+@media(max-width:600px){.g4{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:1fr 1fr;}.g5{grid-template-columns:1fr 1fr;}}
+.hp-wrap{background:var(--bg3);border-radius:99px;height:13px;overflow:hidden;margin:6px 0 4px;}
+.hp-bar{height:100%;border-radius:99px;transition:width .4s,background .3s;}
+.hp-lbl{font-size:13px;color:var(--t2);margin-bottom:8px;}
+.wblock{border:.5px solid var(--bd1);border-radius:0 var(--r-md) var(--r-md) 0;padding:9px 11px;}
+.wr{border-left:3px solid #ef9f27;}.wl{border-left:3px solid #378add;}
+.el-tag{font-size:13px;font-weight:500;padding:4px 10px;border-radius:99px;cursor:pointer;display:inline-block;transition:all .15s;}
+.log-row{font-size:13px;padding:6px 0;border-bottom:.5px solid var(--bd1);color:var(--t2);display:flex;justify-content:space-between;gap:8px;}
+.log-row:last-child{border-bottom:none;}
+.badge{display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:3px 9px;border-radius:var(--r-md);}
+.b-monk{background:#FFF0E6;color:#7A3210;}
+.b-cleric{background:#F5F0FF;color:#4C3091;}
+.b-ranger{background:#E8F5E0;color:#1B5E20;}
+.b-assn{background:#EEEDFE;color:#3C3489;}
+.b-mage{background:#E3F2FD;color:#0D47A1;}
+@media(prefers-color-scheme:dark){
+  .b-monk{background:#3D1A08;color:#FFBC8A;}
+  .b-cleric{background:#26185C;color:#C4B5FD;}
+  .b-ranger{background:#0F2D07;color:#A5D6A7;}
+  .b-assn{background:#26215C;color:#AFA9EC;}
+  .b-mage{background:#0A1F3D;color:#90CAF9;}
+}
+.pip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.pip{width:32px;height:32px;border-radius:50%;border:.5px solid var(--bd2);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.pip.on{background:#ef9f27;border-color:#ef9f27;color:#fff;}
+.pip.on:hover{background:#d48c1d;}
+.pip:not(.on){background:var(--bg2);color:var(--t3);opacity:.35;}
+.slot-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.slot-lv{font-size:13px;font-weight:600;color:var(--t2);min-width:44px;}
+.slot-max-wrap{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t3);margin-right:3px;}
+.slot-max-input{width:56px!important;padding:4px 6px!important;font-size:12px!important;text-align:center;}
+.slot-pip{width:28px;height:28px;border-radius:7px;border:.5px solid var(--bd2);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
+.slot-pip.av{background:#9B72CF;border-color:#9B72CF;color:#fff;}
+.slot-pip.av:hover{background:#7B52AF;}
+.slot-pip:not(.av){background:var(--bg2);color:var(--t3);opacity:.25;}
+.ssub{border:.5px solid var(--bd1);border-radius:var(--r-md);padding:10px 12px;margin-top:8px;background:var(--bg1);}
+.bdr-monk{border-left:3px solid #ef9f27;}
+.bdr-cleric{border-left:3px solid #9B72CF;}
+.bdr-ranger{border-left:3px solid #4CAF50;}
+.bdr-assn{border-left:3px solid #7F77DD;}
+.bdr-mage{border-left:3px solid #2196F3;}
+.bdr-monster{border-left:3px solid #e24b4a;}
+.cls-hd{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+.cls-ct{margin-left:auto;font-size:20px;font-weight:700;}
+.atk-blk{background:var(--bg2);border-radius:var(--r-md);padding:11px 13px;margin-top:10px;}
+.atk-blk-title{font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:9px;}
+
+/* Monster cards */
+.mon-card{background:var(--bg1);border:.5px solid var(--bd1);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px;border-left:3px solid #e24b4a;}
+.debuff-badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:var(--r-md);background:#FEEBEB;color:#791F1F;border:.5px solid #F7C1C1;display:inline-block;margin:3px 2px;}
+@media(prefers-color-scheme:dark){.debuff-badge{background:#3D1008;color:#FFBC8A;border-color:#8B3010;}}
+
+/* BUFF rows */
+.buff-item{display:grid;grid-template-columns:1fr 70px 70px auto;gap:6px;align-items:center;margin-bottom:6px;}
+.buff-tag{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--bg2);border:.5px solid var(--bd1);color:var(--t2);white-space:nowrap;}
+
+/* Target selection */
+.target-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px;}
+.target-chk-label{display:flex;align-items:center;gap:5px;font-size:13px;padding:5px 11px;border:.5px solid var(--bd1);border-radius:var(--r-md);cursor:pointer;background:var(--bg2);transition:all .15s;user-select:none;}
+.target-chk-label:hover{background:var(--bg1);}
+.target-chk-label.checked{background:var(--bg1);border-color:#378ADD;color:#0C447C;}
+@media(prefers-color-scheme:dark){.target-chk-label.checked{border-color:#378ADD;color:#90CAF9;}}
+.target-chk-label input[type=checkbox]{width:14px;height:14px;accent-color:#378ADD;}
+
+/* Per-target formula blocks */
+.ftgt-block{margin-top:8px;border:.5px solid var(--bd1);border-radius:var(--r-md);overflow:hidden;}
+.ftgt-head{font-size:13px;font-weight:700;padding:7px 12px;background:var(--bg2);border-bottom:.5px solid var(--bd1);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ftgt-body{padding:11px 13px;}
+.fline{font-size:14px;color:var(--t2);margin-bottom:6px;line-height:1.6;}
+.ftotal{font-size:17px;font-weight:700;padding-top:8px;border-top:.5px solid var(--bd1);margin-top:6px;}
+
+/* Round bar */
+.round-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg1);border:.5px solid var(--bd1);border-radius:var(--r-lg);margin-bottom:12px;flex-wrap:wrap;}
+.data-bar{display:flex;align-items:center;gap:7px;padding:9px 12px;background:var(--bg1);border:.5px solid var(--bd1);border-radius:var(--r-lg);margin-bottom:12px;flex-wrap:wrap;}
+.data-note{font-size:12px;color:var(--t2);margin-right:auto;}
+.avatar-wrap{position:relative;width:48px;height:48px;flex:0 0 48px;border-radius:11px;overflow:hidden;border:.5px solid var(--bd2);background:var(--bg3);display:flex;align-items:center;justify-content:center;}
+.avatar-img{width:100%;height:100%;object-fit:cover;display:block;}
+.avatar-placeholder{font-size:20px;color:var(--t3);}
+.avatar-edit{position:absolute;right:2px;bottom:2px;width:20px;height:20px;border:0;border-radius:50%;background:rgba(0,0,0,.68);color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.avatar-remove{position:absolute;left:2px;top:2px;width:18px;height:18px;border:0;border-radius:50%;background:rgba(121,31,31,.82);color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mon-avatar{width:56px;height:56px;flex-basis:56px;}
+.log-meta{font-size:11px;color:var(--t3);white-space:nowrap;}
+.storage-warn{color:#a32d2d;font-weight:600;}
+.undead-builder{padding:11px 13px;margin-bottom:10px;background:var(--bg2);border:.5px solid var(--bd1);border-radius:var(--r-md);}
+.manage-panel{padding:12px 14px;margin:-4px 0 12px;background:var(--bg1);border:.5px solid var(--bd1);border-radius:var(--r-md);}
+.manage-row{display:grid;grid-template-columns:minmax(140px,1fr) minmax(180px,1.5fr) auto;gap:8px;align-items:center;padding:8px 0;border-bottom:.5px solid var(--bd1);}
+.manage-row:last-child{border-bottom:none;}
+.manage-meta{font-size:12px;color:var(--t2);line-height:1.5;}
+.manage-actions{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap;}
+.sync-panel{padding:12px 14px;margin:-4px 0 12px;background:var(--bg1);border:.5px solid var(--bd1);border-radius:var(--r-md);}
+.sync-grid{display:grid;grid-template-columns:minmax(240px,1fr) auto;gap:8px;align-items:end;}
+.sync-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.sync-detail{font-size:12px;color:var(--t2);line-height:1.55;margin-top:8px;}
+.sync-ok{color:#27500A!important;font-weight:600;}
+.sync-warn{color:#854F0B!important;font-weight:600;}
+.sync-error{color:#a32d2d!important;font-weight:600;}
+.log-filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.log-filter-btn.on{background:#378ADD;border-color:#378ADD;color:#fff;}
+.log-summary{font-size:12px;color:var(--t3);margin-left:auto;}
+@media(max-width:600px){.data-note{width:100%;}.round-bar .btn,.data-bar .btn{flex:1;}.avatar-wrap{width:42px;height:42px;flex-basis:42px;}}
+@media(max-width:600px){.manage-row,.sync-grid{grid-template-columns:1fr;}.manage-actions{justify-content:flex-start;}.log-summary{width:100%;margin-left:0;}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>⚔️ TRPG DM 自訂戰鬥計算表</h1>
+<div class="sub">地下城主 DM 專用 · 自訂戰鬥規則</div>
+
+<!-- Round bar -->
+<div class="round-bar">
+  <span style="font-size:15px;font-weight:700;">第 <span id="round-num">1</span> 回合</span>
+  <button class="btn btn-b" onclick="nextRound()">⏭ 下一回合</button>
+  <button class="btn btn-b" onclick="applyAll()">套用全部傷害 →</button>
+  <button class="btn btn-o" onclick="restAll()" style="margin-left:auto;">🌙 長休</button>
+  <button class="btn btn-r" onclick="clearSave()" style="font-size:12px;padding:5px 10px;">🗑 清除存檔</button>
+  <span id="save-ind" style="font-size:11px;color:var(--t3);white-space:nowrap;" aria-live="polite"></span>
+</div>
+
+<div class="data-bar">
+  <span class="data-note">💾 本機自動儲存，可選擇連接 Google Drive 跨裝置同步</span>
+  <button class="btn btn-b" onclick="toggleSyncPanel()">☁ Google 同步</button>
+  <button class="btn btn-p" onclick="toggleCampaignPanel()">📚 戰役與快照</button>
+  <button class="btn btn-b" onclick="exportData()">匯出 JSON</button>
+  <button class="btn btn-g" onclick="$('import-file').click()">匯入 JSON</button>
+  <button class="btn btn-o" onclick="restoreLatestBackup()">還原上次備份</button>
+  <input type="file" id="import-file" accept="application/json,.json" hidden onchange="handleImportFile(this)">
+  <span id="backup-ind" style="font-size:11px;color:var(--t3);white-space:nowrap;" aria-live="polite"></span>
+  <span id="sync-ind" style="font-size:11px;color:var(--t3);white-space:nowrap;" aria-live="polite">雲端未設定</span>
+</div>
+<div id="sync-panel" class="sync-panel" style="display:none;">
+  <div class="sec">Google Drive 跨裝置同步</div>
+  <div class="sync-grid">
+    <div>
+      <label class="fl" for="google-client-id">Google OAuth Client ID</label>
+      <input type="text" id="google-client-id" data-no-save autocomplete="off" spellcheck="false" placeholder="123456789-xxx.apps.googleusercontent.com">
+    </div>
+    <button class="btn btn-p" onclick="saveGoogleClientId()">儲存設定</button>
+  </div>
+  <div class="sync-actions">
+    <button id="google-connect-btn" class="btn btn-b" onclick="connectGoogleSync()">連接 Google</button>
+    <button class="btn btn-g" onclick="syncCloudNow()">立即同步</button>
+    <button class="btn btn-o" onclick="downloadCloudNow()">下載雲端版本</button>
+    <button class="btn btn-r" onclick="forceUploadCloud()">以本機覆蓋雲端</button>
+    <button class="btn" onclick="disconnectGoogleSync()">中斷連接</button>
+  </div>
+  <div id="sync-detail" class="sync-detail">設定 Client ID 後即可使用；Client ID 可以公開，但請勿放入 Client Secret。</div>
+  <div class="sync-detail">戰役狀態與戰鬥紀錄會同步；角色圖片及本機快照目前保留在各裝置，避免同步檔過大。</div>
+</div>
+<div id="campaign-panel" class="manage-panel" style="display:none;">
+  <div class="g2" style="margin-bottom:10px;">
+    <div>
+      <label class="fl">目前戰役存檔名稱</label>
+      <input type="text" id="campaign-name" value="未命名戰役" maxlength="80" placeholder="例如：龍槍戰役">
+    </div>
+    <div>
+      <label class="fl">這次快照名稱</label>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="snapshot-name" maxlength="80" data-no-save placeholder="例如：進入王房前">
+        <button class="btn btn-p" onclick="createManualSnapshot()">建立快照</button>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+    <div class="sec" style="margin:0;">手動快照</div>
+    <span id="snapshot-count" class="manage-meta"></span>
+  </div>
+  <div id="snapshot-list"></div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" onclick="showTab('combat')">⚔️ 戰鬥 &amp; 資源</button>
+  <button class="tab" onclick="showTab('log')">📜 戰鬥紀錄</button>
+</div>
+
+<div id="tab-combat">
+
+<!-- ═══ MONSTERS ═══ -->
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
+    <div class="sec" style="margin:0;">怪物列表</div>
+    <button class="btn btn-r" onclick="addMonster()">+ 新增怪物</button>
+  </div>
+  <div id="monsters-list"></div>
+</div>
+
+<!-- ═══ MONK ═══ -->
+<div class="card bdr-monk" style="border-radius:0 var(--r-lg) var(--r-lg) 0;">
+  <div class="cls-hd">
+    <span class="badge b-monk">武僧</span>
+    <input type="text" id="monk-cname" value="武僧" style="font-weight:600;font-size:17px;border:none;background:transparent;width:160px;">
+    <span id="monk-ct" class="cls-ct" style="color:var(--t3);">0</span>
+  </div>
+  <div class="g5" style="margin-bottom:7px;">
+    <div><label class="fl">目前 HP</label><input type="number" id="monk-hp" value="45" min="0" oninput="updHP('monk')"></div>
+    <div><label class="fl">最大 HP</label><input type="number" id="monk-maxhp" value="45" min="1" oninput="updHP('monk')"></div>
+    <div><label class="fl">物理護甲</label><input type="number" id="monk-parmor" value="16" min="0"></div>
+    <div><label class="fl">魔法護甲</label><input type="number" id="monk-marmor" value="16" min="0"></div>
+    <div><label class="fl">速度(ft)</label><input type="number" id="monk-spd" value="40" min="0"></div>
+  </div>
+  <div class="hp-wrap"><div class="hp-bar" id="monk-hpbar" style="width:100%;background:#639922;"></div></div>
+  <div class="hp-lbl" id="monk-hp-txt">100% HP</div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:9px;flex-wrap:wrap;">
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:600;color:#7A3210;margin-bottom:5px;">🌀 氣點</div>
+      <div style="max-width:150px;margin-bottom:6px;"><label class="fl">最大氣點</label><input type="number" id="monk-ki-max" value="11" min="1" max="50" oninput="updateKiMax()"></div>
+      <div class="pip-row" id="ki-pips"></div>
+    </div>
+    <button class="btn btn-o" onclick="resetKi()" style="align-self:flex-end;">重置氣</button>
+  </div>
+  <div class="divider"></div>
+  <div class="inner">
+    <div style="font-size:14px;font-weight:600;color:#7A3210;margin-bottom:7px;">🔮 四象崁晶甲 · 嵌入格數</div>
+    <div class="g3">
+      <div><label class="fl">目前嵌入</label><input type="number" id="monk-cki" value="0" min="0" oninput="updCrystal()"></div>
+      <div><label class="fl">最大格數</label><input type="number" id="monk-cmax" value="4" min="1" oninput="updCrystal()"></div>
+      <div></div>
+    </div>
+    <div id="monk-cpips" class="pip-row" style="margin-top:5px;"></div>
+  </div>
+  <div class="atk-blk">
+    <div class="atk-blk-title">攻擊 · 拳／武器（雙手同骰，各選屬性與強化）</div>
+    <div class="g3" style="margin-bottom:7px;">
+      <div><label class="fl">攻擊骰值</label><input type="number" id="monk-roll" value="0" min="0" oninput="refreshAll()"></div>
+      <div><label class="fl">調整值</label><input type="number" id="monk-mod" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl">藥水加成</label><input type="number" id="monk-potion" value="0" oninput="refreshAll()"></div>
+    </div>
+    <div class="g2" style="margin-bottom:7px;">
+      <div class="wblock wr">
+        <div style="font-size:13px;font-weight:700;color:#854F0B;margin-bottom:6px;">右手</div>
+        <div class="g2">
+          <div><label class="fl">屬性</label><select id="monk-r-el" onchange="refreshAll()"></select></div>
+          <div><label class="fl">強化值</label><input type="number" id="monk-r-enhance" value="0" oninput="refreshAll()"></div>
+        </div>
+      </div>
+      <div class="wblock wl">
+        <div style="font-size:13px;font-weight:700;color:#185FA5;margin-bottom:6px;">左手</div>
+        <div class="g2">
+          <div><label class="fl">屬性</label><select id="monk-l-el" onchange="refreshAll()"></select></div>
+          <div><label class="fl">強化值</label><input type="number" id="monk-l-enhance" value="0" oninput="refreshAll()"></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:7px;">
+      <label class="fl">技能傷害</label><input type="number" id="monk-skill" value="0" min="0" oninput="refreshAll()">
+    </div>
+    <div class="g3" style="margin-bottom:7px;padding:10px;background:var(--bg3);border-radius:var(--r-md);">
+      <div><label class="fl" style="color:#791F1F;font-weight:700;">🛡 物理扣甲點數</label><input type="number" id="monk-arpen" value="0" min="0" oninput="refreshAll()" style="border-color:#F7C1C1;"></div>
+      <div><label class="fl" style="color:#791F1F;font-weight:700;">持續回合</label><input type="number" id="monk-arpen-rounds" value="1" min="0" max="99" oninput="refreshAll()" style="border-color:#F7C1C1;"></div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:2px;"><span style="font-size:12px;color:var(--t3);">打到怪物時降低物理護甲</span></div>
+    </div>
+    <!-- BUFFs -->
+    <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">BUFF 加成</span>
+        <button class="btn btn-p" style="font-size:12px;padding:4px 10px;" onclick="addBuff('monk')">+ 新增</button>
+      </div>
+      <div id="monk-buffs"></div>
+    </div>
+    <!-- Targets -->
+    <div style="margin-top:10px;">
+      <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">攻擊目標</span>
+      <div class="target-row" id="monk-targets"></div>
+    </div>
+    <!-- Formula per target -->
+    <div id="monk-formula-list"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button class="btn btn-r" style="font-size:14px;padding:9px 20px;font-weight:600;" onclick="applyPlayer('monk')">⚔️ 攻擊</button>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;color:var(--t2);">⚡ 特殊技能備忘</div>
+    <button class="btn" style="font-size:12px;" onclick="addSkill('monk')">+ 新增</button>
+  </div>
+  <div id="monk-skills"></div>
+</div>
+
+<!-- ═══ CLERIC ═══ -->
+<div class="card bdr-cleric" style="border-radius:0 var(--r-lg) var(--r-lg) 0;">
+  <div class="cls-hd">
+    <span class="badge b-cleric">牧師</span>
+    <input type="text" id="cleric-cname" value="牧師" style="font-weight:600;font-size:17px;border:none;background:transparent;width:160px;">
+    <span id="cleric-ct" class="cls-ct" style="color:var(--t3);">0</span>
+  </div>
+  <div class="g4" style="margin-bottom:7px;">
+    <div><label class="fl">目前 HP</label><input type="number" id="cleric-hp" value="38" min="0" oninput="updHP('cleric')"></div>
+    <div><label class="fl">最大 HP</label><input type="number" id="cleric-maxhp" value="38" min="1" oninput="updHP('cleric')"></div>
+    <div><label class="fl">物理護甲</label><input type="number" id="cleric-parmor" value="17" min="0"></div>
+    <div><label class="fl">魔法護甲</label><input type="number" id="cleric-marmor" value="17" min="0"></div>
+  </div>
+  <div class="hp-wrap"><div class="hp-bar" id="cleric-hpbar" style="width:100%;background:#639922;"></div></div>
+  <div class="hp-lbl" id="cleric-hp-txt">100% HP</div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;color:#4C3091;">✨ 法術位（每環最大格數可自訂）</div>
+    <button class="btn btn-p" style="font-size:12px;" onclick="resetSlots('cleric')">全部補滿</button>
+  </div>
+  <div id="cleric-slots"></div>
+  <div class="divider"></div>
+  <!-- Heal Calculator -->
+  <div class="atk-blk" style="border-left:3px solid #4CAF50;background:var(--bg2);">
+    <div class="atk-blk-title" style="color:#1B5E20;">💚 補血計算</div>
+    <div class="g3" style="margin-bottom:8px;">
+      <div><label class="fl">治療量</label><input type="number" id="cleric-heal-roll" value="0" min="0" oninput="calcHeal()"></div>
+      <div><label class="fl">聖徽強化值</label><input type="number" id="cleric-heal-enh" value="0" oninput="calcHeal()"></div>
+      <div><label class="fl">額外調整加值</label><input type="number" id="cleric-heal-mod" value="0" oninput="calcHeal()"></div>
+    </div>
+    <div id="cleric-heal-formula" style="font-size:15px;color:var(--t2);padding:8px 10px;background:var(--bg1);border:.5px solid var(--bd1);border-radius:var(--r-md);margin-bottom:8px;"></div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button class="btn btn-g" style="font-size:14px;padding:9px 20px;font-weight:600;" onclick="logHeal()">💚 記錄補血</button>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="atk-blk">
+    <div class="atk-blk-title">攻擊 · 聖錘／武器</div>
+    <div class="g4" style="margin-bottom:7px;">
+      <div><label class="fl">攻擊骰值</label><input type="number" id="cleric-roll" value="0" min="0" oninput="refreshAll()"></div>
+      <div><label class="fl">調整值</label><input type="number" id="cleric-mod" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl">強化值</label><input type="number" id="cleric-enhance" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl">藥水加成</label><input type="number" id="cleric-potion" value="0" oninput="refreshAll()"></div>
+    </div>
+    <div class="g4">
+      <div><label class="fl">技能傷害</label><input type="number" id="cleric-skill" value="0" min="0" oninput="refreshAll()"></div>
+      <div><label class="fl">武器屬性</label><select id="cleric-el" onchange="refreshAll()"></select></div>
+      <div></div><div></div>
+    </div>
+    <!-- BUFFs -->
+    <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">BUFF 加成</span>
+        <button class="btn btn-p" style="font-size:12px;padding:4px 10px;" onclick="addBuff('cleric')">+ 新增</button>
+      </div>
+      <div id="cleric-buffs"></div>
+    </div>
+    <!-- Targets -->
+    <div style="margin-top:10px;">
+      <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">攻擊目標</span>
+      <div class="target-row" id="cleric-targets"></div>
+    </div>
+    <div id="cleric-formula-list"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button class="btn btn-r" style="font-size:14px;padding:9px 20px;font-weight:600;" onclick="applyPlayer('cleric')">⚔️ 攻擊</button>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+    <div style="font-size:14px;font-weight:600;color:#4C3091;">💀 死靈魁儡（攻擊計入牧師總傷害）</div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-p" style="font-size:12px;" onclick="showUndeadPicker()">📋 模板管理</button>
+    </div>
+  </div>
+  <div class="undead-builder">
+    <div class="sec">建立並召喚魁儡</div>
+    <div class="g5" style="margin-bottom:7px;">
+      <div><label class="fl">名稱</label><input type="text" id="undead-new-name" value="新魁儡"></div>
+      <div><label class="fl">最大 HP</label><input type="number" id="undead-new-maxhp" value="13" min="1"></div>
+      <div><label class="fl">物理護甲</label><input type="number" id="undead-new-parmor" value="13" min="0"></div>
+      <div><label class="fl">魔法護甲</label><input type="number" id="undead-new-marmor" value="13" min="0"></div>
+      <div><label class="fl">攻擊調整值</label><input type="number" id="undead-new-mod" value="3"></div>
+    </div>
+    <div class="g2" style="margin-bottom:7px;">
+      <div><label class="fl">召喚需要環位</label><input type="number" id="undead-new-spell-level" value="3" min="1" max="9"></div>
+      <div><label class="fl">資訊／能力備註</label><textarea id="undead-new-notes" rows="2" placeholder="抗性、移動、特殊能力……"></textarea></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button class="btn btn-r" onclick="addUndead()">召喚並扣除環位</button>
+    </div>
+  </div>
+  <div id="undead-template-panel" class="manage-panel" style="display:none;"></div>
+  <div id="undead-list"></div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;color:var(--t2);">⚡ 特殊技能備忘</div>
+    <button class="btn" style="font-size:12px;" onclick="addSkill('cleric')">+ 新增</button>
+  </div>
+  <div id="cleric-skills"></div>
+</div>
+
+<!-- ═══ RANGER ═══ -->
+<div class="card bdr-ranger" style="border-radius:0 var(--r-lg) var(--r-lg) 0;">
+  <div class="cls-hd">
+    <span class="badge b-ranger">遊俠</span>
+    <input type="text" id="ranger-cname" value="遊俠" style="font-weight:600;font-size:17px;border:none;background:transparent;width:160px;">
+    <span id="ranger-ct" class="cls-ct" style="color:var(--t3);">0</span>
+  </div>
+  <div class="g4" style="margin-bottom:7px;">
+    <div><label class="fl">目前 HP</label><input type="number" id="ranger-hp" value="42" min="0" oninput="updHP('ranger')"></div>
+    <div><label class="fl">最大 HP</label><input type="number" id="ranger-maxhp" value="42" min="1" oninput="updHP('ranger')"></div>
+    <div><label class="fl">物理護甲</label><input type="number" id="ranger-parmor" value="15" min="0"></div>
+    <div><label class="fl">魔法護甲</label><input type="number" id="ranger-marmor" value="15" min="0"></div>
+  </div>
+  <div class="hp-wrap"><div class="hp-bar" id="ranger-hpbar" style="width:100%;background:#639922;"></div></div>
+  <div class="hp-lbl" id="ranger-hp-txt">100% HP</div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;color:#1B5E20;">✨ 法術位（每環最大格數可自訂）</div>
+    <button class="btn btn-g" style="font-size:12px;" onclick="resetSlots('ranger')">全部補滿</button>
+  </div>
+  <div id="ranger-slots"></div>
+  <div class="divider"></div>
+  <div class="inner">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:7px;">
+      <div style="font-size:14px;font-weight:600;color:#1B5E20;">🦉 靈寵 ·
+        <input type="text" id="owl-name" value="羽羽" style="font-weight:600;font-size:14px;border:none;background:transparent;display:inline;width:80px;">
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-g" style="font-size:12px;" onclick="owlHelp()">輔助攻擊</button>
+        <button class="btn btn-r" style="font-size:12px;" onclick="owlKO()">KO</button>
+        <button class="btn" style="font-size:12px;" onclick="owlRevive()">復活</button>
+      </div>
+    </div>
+    <div class="g5" style="margin-bottom:7px;">
+      <div><label class="fl">目前 HP</label><input type="number" id="owl-hp" value="21" min="0" oninput="updOwlHP()"></div>
+      <div><label class="fl">最大 HP <span style="color:#1B5E20;font-size:11px;">(遊俠½)</span></label>
+        <input type="number" id="owl-maxhp" value="21" min="1" oninput="updOwlHP()" readonly style="opacity:.6;"></div>
+      <div><label class="fl">物理護甲</label><input type="number" id="owl-parmor" value="11" min="0"></div>
+      <div><label class="fl">魔法護甲</label><input type="number" id="owl-marmor" value="11" min="0"></div>
+      <div><label class="fl">爪擊傷害</label><input type="number" id="owl-atk" value="1" min="0"></div>
+    </div>
+    <div class="hp-wrap"><div class="hp-bar" id="owl-hpbar" style="width:100%;background:#4CAF50;"></div></div>
+    <div class="hp-lbl" id="owl-hp-txt">100% HP</div>
+    <div class="g2" style="margin-top:7px;">
+      <div><label class="fl">速度(ft)</label><input type="number" id="owl-spd" value="60" min="0"></div>
+      <div><label class="fl">攻擊屬性</label><select id="owl-el"></select></div>
+    </div>
+    <div style="background:var(--bg2);border-radius:var(--r-md);padding:8px 10px;margin-top:8px;">
+      <div style="font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;">靈寵攻擊面板</div>
+      <div class="g2" style="margin-bottom:6px;">
+        <div><label class="fl">爪擊骰值</label><input type="number" id="owl-roll" value="0" min="0" oninput="refreshAll()"></div>
+        <div><label class="fl">調整值</label><input type="number" id="owl-atk-mod" value="3" oninput="refreshAll()"></div>
+      </div>
+      <div style="font-size:14px;color:var(--t2);" id="owl-formula"></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;">
+      <span style="font-size:13px;padding:3px 9px;border:.5px solid var(--bd1);border-radius:99px;background:var(--bg1);">👁 黑暗視覺</span>
+      <span style="font-size:13px;padding:3px 9px;border:.5px solid var(--bd1);border-radius:99px;background:var(--bg1);">🔕 無聲飛行</span>
+      <span style="font-size:13px;padding:3px 9px;border:.5px solid var(--bd1);border-radius:99px;background:var(--bg1);">🎯 輔助→主人優勢</span>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:14px;font-weight:600;color:#1B5E20;">🦉 靈寵特殊能力備註</div>
+      <button class="btn btn-g" style="font-size:12px;" onclick="addSkill('owl')">+ 新增</button>
+    </div>
+    <div id="owl-skills"></div>
+  </div>
+  <div class="atk-blk">
+    <div class="atk-blk-title">攻擊 · 弓／刀</div>
+    <div class="g4" style="margin-bottom:7px;">
+      <div><label class="fl">攻擊骰值</label><input type="number" id="ranger-roll" value="0" min="0" oninput="refreshAll()"></div>
+      <div><label class="fl">調整值</label><input type="number" id="ranger-mod" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl">強化值</label><input type="number" id="ranger-enhance" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl">藥水加成</label><input type="number" id="ranger-potion" value="0" oninput="refreshAll()"></div>
+    </div>
+    <div class="g4">
+      <div><label class="fl">技能傷害</label><input type="number" id="ranger-skill" value="0" min="0" oninput="refreshAll()"></div>
+      <div><label class="fl">🎯 獵人標記骰</label><input type="number" id="ranger-mark-dmg" value="0" min="0" oninput="refreshAll()" placeholder="骰值"></div>
+      <div><label class="fl">武器屬性</label><select id="ranger-el" onchange="refreshAll()"></select></div>
+      <div></div>
+    </div>
+    <!-- BUFFs -->
+    <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">BUFF 加成</span>
+        <button class="btn btn-p" style="font-size:12px;padding:4px 10px;" onclick="addBuff('ranger')">+ 新增</button>
+      </div>
+      <div id="ranger-buffs"></div>
+    </div>
+    <!-- Targets -->
+    <div style="margin-top:10px;">
+      <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">攻擊目標</span>
+      <div class="target-row" id="ranger-targets"></div>
+    </div>
+    <div id="ranger-formula-list"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button class="btn btn-r" style="font-size:14px;padding:9px 20px;font-weight:600;" onclick="applyPlayer('ranger')">⚔️ 攻擊</button>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;color:var(--t2);">⚡ 特殊技能備忘</div>
+    <button class="btn" style="font-size:12px;" onclick="addSkill('ranger')">+ 新增</button>
+  </div>
+  <div id="ranger-skills"></div>
+</div>
+
+<!-- ═══ ASSASSIN 1 ═══ -->
+<div class="card bdr-assn" style="border-radius:0 var(--r-lg) var(--r-lg) 0;">
+  <div class="cls-hd">
+    <span class="badge b-assn">刺客 I</span>
+    <input type="text" id="assn1-cname" value="刺客一" style="font-weight:600;font-size:17px;border:none;background:transparent;width:160px;">
+    <span id="assn1-ct" class="cls-ct" style="color:var(--t3);">0</span>
+  </div>
+  <div class="g4" style="margin-bottom:7px;">
+    <div><label class="fl">目前 HP</label><input type="number" id="assn1-hp" value="35" min="0" oninput="updHP('assn1')"></div>
+    <div><label class="fl">最大 HP</label><input type="number" id="assn1-maxhp" value="35" min="1" oninput="updHP('assn1')"></div>
+    <div><label class="fl">物理護甲</label><input type="number" id="assn1-parmor" value="15" min="0"></div>
+    <div><label class="fl">魔法護甲</label><input type="number" id="assn1-marmor" value="15" min="0"></div>
+  </div>
+  <div class="hp-wrap"><div class="hp-bar" id="assn1-hpbar" style="width:100%;background:#639922;"></div></div>
+  <div class="hp-lbl" id="assn1-hp-txt">100% HP</div>
+  <div class="divider"></div>
+  <div class="atk-blk">
+    <div class="atk-blk-title">攻擊 · 雙刀</div>
+    <div class="g2" style="margin-bottom:8px;">
+      <div class="wblock wr">
+        <div style="font-size:13px;font-weight:700;color:#854F0B;margin-bottom:6px;">右手武器</div>
+        <div class="g2">
+          <div><label class="fl">攻擊骰</label><input type="number" id="assn1-r-roll" value="0" min="0" oninput="refreshAll()"></div>
+          <div><label class="fl">屬性</label><select id="assn1-r-el" onchange="refreshAll()"></select></div>
+        </div>
+        <div style="margin-top:6px;"><label class="fl">強化值</label><input type="number" id="assn1-r-enhance" value="0" oninput="refreshAll()"></div>
+      </div>
+      <div class="wblock wl">
+        <div style="font-size:13px;font-weight:700;color:#185FA5;margin-bottom:6px;">左手武器</div>
+        <div class="g2">
+          <div><label class="fl">攻擊骰</label><input type="number" id="assn1-l-roll" value="0" min="0" oninput="refreshAll()"></div>
+          <div><label class="fl">屬性</label><select id="assn1-l-el" onchange="refreshAll()"></select></div>
+        </div>
+        <div style="margin-top:6px;"><label class="fl">強化值</label><input type="number" id="assn1-l-enhance" value="0" oninput="refreshAll()"></div>
+      </div>
+    </div>
+    <div class="g4" style="margin-bottom:7px;">
+      <div><label class="fl">調整值</label><input type="number" id="assn1-mod" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl">藥水加成</label><input type="number" id="assn1-potion" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl" style="color:#534AB7;">★ 偷襲傷害</label><input type="number" id="assn1-sneak" value="0" min="0" style="border-color:#AFA9EC;" oninput="refreshAll()"></div>
+      <div><label class="fl">額外傷害</label><input type="number" id="assn1-extra" value="0" min="0" oninput="refreshAll()"></div>
+    </div>
+    <div class="g3" style="padding:10px;background:var(--bg3);border-radius:var(--r-md);">
+      <div><label class="fl" style="color:#791F1F;font-weight:700;">🛡 物理扣甲點數</label><input type="number" id="assn1-arpen" value="0" min="0" oninput="refreshAll()" style="border-color:#F7C1C1;"></div>
+      <div><label class="fl" style="color:#791F1F;font-weight:700;">持續回合</label><input type="number" id="assn1-arpen-rounds" value="1" min="0" max="99" oninput="refreshAll()" style="border-color:#F7C1C1;"></div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:2px;"><span style="font-size:12px;color:var(--t3);">打到怪物時降低物理護甲</span></div>
+    </div>
+    <!-- BUFFs -->
+    <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">BUFF 加成</span>
+        <button class="btn btn-p" style="font-size:12px;padding:4px 10px;" onclick="addBuff('assn1')">+ 新增</button>
+      </div>
+      <div id="assn1-buffs"></div>
+    </div>
+    <!-- Targets -->
+    <div style="margin-top:10px;">
+      <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">攻擊目標</span>
+      <div class="target-row" id="assn1-targets"></div>
+    </div>
+    <div id="assn1-formula-list"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button class="btn btn-r" style="font-size:14px;padding:9px 20px;font-weight:600;" onclick="applyPlayer('assn1')">⚔️ 攻擊</button>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;color:var(--t2);">⚡ 特殊技能備忘</div>
+    <button class="btn" style="font-size:12px;" onclick="addSkill('assn1')">+ 新增</button>
+  </div>
+  <div id="assn1-skills"></div>
+</div>
+
+<!-- ═══ ASSASSIN 2 ═══ -->
+<div class="card bdr-assn" style="border-radius:0 var(--r-lg) var(--r-lg) 0;">
+  <div class="cls-hd">
+    <span class="badge b-assn">刺客 II</span>
+    <input type="text" id="assn2-cname" value="刺客二" style="font-weight:600;font-size:17px;border:none;background:transparent;width:160px;">
+    <span id="assn2-ct" class="cls-ct" style="color:var(--t3);">0</span>
+  </div>
+  <div class="g4" style="margin-bottom:7px;">
+    <div><label class="fl">目前 HP</label><input type="number" id="assn2-hp" value="35" min="0" oninput="updHP('assn2')"></div>
+    <div><label class="fl">最大 HP</label><input type="number" id="assn2-maxhp" value="35" min="1" oninput="updHP('assn2')"></div>
+    <div><label class="fl">物理護甲</label><input type="number" id="assn2-parmor" value="15" min="0"></div>
+    <div><label class="fl">魔法護甲</label><input type="number" id="assn2-marmor" value="15" min="0"></div>
+  </div>
+  <div class="hp-wrap"><div class="hp-bar" id="assn2-hpbar" style="width:100%;background:#639922;"></div></div>
+  <div class="hp-lbl" id="assn2-hp-txt">100% HP</div>
+  <div class="divider"></div>
+  <div class="atk-blk">
+    <div class="atk-blk-title">攻擊 · 雙刀</div>
+    <div class="g2" style="margin-bottom:8px;">
+      <div class="wblock wr">
+        <div style="font-size:13px;font-weight:700;color:#854F0B;margin-bottom:6px;">右手武器</div>
+        <div class="g2">
+          <div><label class="fl">攻擊骰</label><input type="number" id="assn2-r-roll" value="0" min="0" oninput="refreshAll()"></div>
+          <div><label class="fl">屬性</label><select id="assn2-r-el" onchange="refreshAll()"></select></div>
+        </div>
+        <div style="margin-top:6px;"><label class="fl">強化值</label><input type="number" id="assn2-r-enhance" value="0" oninput="refreshAll()"></div>
+      </div>
+      <div class="wblock wl">
+        <div style="font-size:13px;font-weight:700;color:#185FA5;margin-bottom:6px;">左手武器</div>
+        <div class="g2">
+          <div><label class="fl">攻擊骰</label><input type="number" id="assn2-l-roll" value="0" min="0" oninput="refreshAll()"></div>
+          <div><label class="fl">屬性</label><select id="assn2-l-el" onchange="refreshAll()"></select></div>
+        </div>
+        <div style="margin-top:6px;"><label class="fl">強化值</label><input type="number" id="assn2-l-enhance" value="0" oninput="refreshAll()"></div>
+      </div>
+    </div>
+    <div class="g4" style="margin-bottom:7px;">
+      <div><label class="fl">調整值</label><input type="number" id="assn2-mod" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl">藥水加成</label><input type="number" id="assn2-potion" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl" style="color:#534AB7;">★ 偷襲傷害</label><input type="number" id="assn2-sneak" value="0" min="0" style="border-color:#AFA9EC;" oninput="refreshAll()"></div>
+      <div><label class="fl">額外傷害</label><input type="number" id="assn2-extra" value="0" min="0" oninput="refreshAll()"></div>
+    </div>
+    <div class="g3" style="padding:10px;background:var(--bg3);border-radius:var(--r-md);">
+      <div><label class="fl" style="color:#791F1F;font-weight:700;">🛡 物理扣甲點數</label><input type="number" id="assn2-arpen" value="0" min="0" oninput="refreshAll()" style="border-color:#F7C1C1;"></div>
+      <div><label class="fl" style="color:#791F1F;font-weight:700;">持續回合</label><input type="number" id="assn2-arpen-rounds" value="1" min="0" max="99" oninput="refreshAll()" style="border-color:#F7C1C1;"></div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:2px;"><span style="font-size:12px;color:var(--t3);">打到怪物時降低物理護甲</span></div>
+    </div>
+    <!-- BUFFs -->
+    <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">BUFF 加成</span>
+        <button class="btn btn-p" style="font-size:12px;padding:4px 10px;" onclick="addBuff('assn2')">+ 新增</button>
+      </div>
+      <div id="assn2-buffs"></div>
+    </div>
+    <!-- Targets -->
+    <div style="margin-top:10px;">
+      <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">攻擊目標</span>
+      <div class="target-row" id="assn2-targets"></div>
+    </div>
+    <div id="assn2-formula-list"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button class="btn btn-r" style="font-size:14px;padding:9px 20px;font-weight:600;" onclick="applyPlayer('assn2')">⚔️ 攻擊</button>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;color:var(--t2);">⚡ 特殊技能備忘</div>
+    <button class="btn" style="font-size:12px;" onclick="addSkill('assn2')">+ 新增</button>
+  </div>
+  <div id="assn2-skills"></div>
+</div>
+
+<!-- ═══ MAGE ═══ -->
+<div class="card bdr-mage" style="border-radius:0 var(--r-lg) var(--r-lg) 0;">
+  <div class="cls-hd">
+    <span class="badge b-mage">法師</span>
+    <input type="text" id="mage-cname" value="法師" style="font-weight:600;font-size:17px;border:none;background:transparent;width:160px;">
+    <span id="mage-ct" class="cls-ct" style="color:var(--t3);">0</span>
+  </div>
+  <div class="g5" style="margin-bottom:7px;">
+    <div><label class="fl">目前 HP</label><input type="number" id="mage-hp" value="28" min="0" oninput="updHP('mage')"></div>
+    <div><label class="fl">最大 HP</label><input type="number" id="mage-maxhp" value="28" min="1" oninput="updHP('mage')"></div>
+    <div><label class="fl">物理護甲</label><input type="number" id="mage-parmor" value="13" min="0"></div>
+    <div><label class="fl">魔法護甲</label><input type="number" id="mage-marmor" value="13" min="0"></div>
+    <div><label class="fl">奧術恢復(次)</label><input type="number" id="mage-recovery" value="1" min="0" max="5"></div>
+  </div>
+  <div class="hp-wrap"><div class="hp-bar" id="mage-hpbar" style="width:100%;background:#639922;"></div></div>
+  <div class="hp-lbl" id="mage-hp-txt">100% HP</div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;color:#0D47A1;">✨ 法術位（每環最大格數可自訂）</div>
+    <button class="btn btn-b" style="font-size:12px;" onclick="resetSlots('mage')">全部補滿</button>
+  </div>
+  <div id="mage-slots"></div>
+  <div class="divider"></div>
+  <div class="atk-blk">
+    <div class="atk-blk-title">攻擊 · 法杖</div>
+    <div class="g4" style="margin-bottom:7px;">
+      <div><label class="fl">攻擊骰值</label><input type="number" id="mage-roll" value="0" min="0" oninput="refreshAll()"></div>
+      <div><label class="fl">法術調整</label><input type="number" id="mage-mod" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl">強化值</label><input type="number" id="mage-enhance" value="0" oninput="refreshAll()"></div>
+      <div><label class="fl">藥水加成</label><input type="number" id="mage-potion" value="0" oninput="refreshAll()"></div>
+    </div>
+    <div class="g4">
+      <div><label class="fl">技能傷害</label><input type="number" id="mage-skill" value="0" min="0" oninput="refreshAll()"></div>
+      <div><label class="fl">法杖屬性</label><select id="mage-el" onchange="refreshAll()"></select></div>
+      <div></div><div></div>
+    </div>
+    <!-- BUFFs -->
+    <div style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+        <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">BUFF 加成</span>
+        <button class="btn btn-p" style="font-size:12px;padding:4px 10px;" onclick="addBuff('mage')">+ 新增</button>
+      </div>
+      <div id="mage-buffs"></div>
+    </div>
+    <!-- Targets -->
+    <div style="margin-top:10px;">
+      <span style="font-size:12px;font-weight:700;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;">攻擊目標</span>
+      <div class="target-row" id="mage-targets"></div>
+    </div>
+    <div id="mage-formula-list"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button class="btn btn-r" style="font-size:14px;padding:9px 20px;font-weight:600;" onclick="applyPlayer('mage')">⚔️ 攻擊</button>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div style="font-size:14px;font-weight:600;color:var(--t2);">⚡ 特殊技能備忘</div>
+    <button class="btn" style="font-size:12px;" onclick="addSkill('mage')">+ 新增</button>
+  </div>
+  <div id="mage-skills"></div>
+</div>
+
+<!-- ═══ NPC ═══ -->
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;">
+    <div class="sec" style="margin:0;">🛡 友軍 NPC 出招</div>
+    <button class="btn btn-g" onclick="addNPC()">+ 新增 NPC</button>
+  </div>
+  <div id="combat-npcs"></div>
+</div>
+
+</div><!-- /tab-combat -->
+
+<div id="tab-log" style="display:none;">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+      <div class="sec" style="margin:0;">戰鬥紀錄</div>
+      <button class="btn btn-r" onclick="clearLog()">清除</button>
+    </div>
+    <div class="log-filter-row">
+      <button id="log-filter-all" class="btn log-filter-btn on" onclick="setLogFilter('all')">全部</button>
+      <button id="log-filter-spell" class="btn log-filter-btn" onclick="setLogFilter('spell')">法術位</button>
+      <button id="log-filter-ki" class="btn log-filter-btn" onclick="setLogFilter('ki')">氣點</button>
+      <span id="log-summary" class="log-summary"></span>
+    </div>
+    <div id="log-list"></div>
+  </div>
+</div>
+
+</div><!-- .app -->
+<script src="assets/js/config.js"></script>
+<script src="assets/js/google-drive-sync.js"></script>
+<script>
+// ══════════════ CONSTANTS ══════════════
+const ELS=['無','🔥火','⚡雷','💧水','❄冰','🌀風','🪨土','☀光','🌑暗'];
+const ECOL={'無':'#888780','🔥火':'#D85A30','⚡雷':'#BA7517','💧水':'#378ADD','❄冰':'#85B7EB','🌀風':'#1D9E75','🪨土':'#639922','☀光':'#EF9F27','🌑暗':'#7F77DD'};
+const EBG={'無':'#F1EFE8','🔥火':'#FAECE7','⚡雷':'#FAEEDA','💧水':'#E6F1FB','❄冰':'#E6F1FB','🌀風':'#E1F5EE','🪨土':'#EAF3DE','☀光':'#FAEEDA','🌑暗':'#EEEDFE'};
+const DEFAULT_CLERIC_MAX=[4,3,3,3,2,1,0,0,0];
+const DEFAULT_RANGER_MAX=[0,0,0,0,0,0,0,0,0];
+const DEFAULT_MAGE_MAX=[4,3,3,3,2,1,0,0,0];
+const PLAYERS=['monk','cleric','ranger','assn1','assn2','mage'];
+
+// ══════════════ STATE ══════════════
+let clericSlotMax=DEFAULT_CLERIC_MAX.slice();
+let rangerSlotMax=DEFAULT_RANGER_MAX.slice();
+let mageSlotMax=DEFAULT_MAGE_MAX.slice();
+let clericSlots=clericSlotMax.slice();
+let rangerSlots=rangerSlotMax.slice();
+let mageSlots=mageSlotMax.slice();
+let kiState=Array(11).fill(true);
+let log=[], logFilter='all', healOpen=false;
+let entityImages={};
+let appReady=false;
+let saveTimer=null;
+let saveQueue=Promise.resolve();
+let lastBackupAt=0;
+let stateDirty=false;
+let pendingBackupReason='';
+const GOOGLE_CLIENT_ID_KEY='trpg_google_client_id';
+const CLOUD_SYNC_META_KEY='trpg_cloud_sync_meta_v1';
+const CLOUD_STATE_FILE='trpg-dm-current-state.json';
+const CLOUD_SYNC_DELAY_MS=3500;
+let hadStoredState=false;
+let cloudSyncClient=null;
+let cloudSyncTimer=null;
+let cloudSyncQueue=Promise.resolve();
+let syncMeta=null;
+let undeads=[], nextUid=1;
+let undeadTemplates=[
+  {name:'骷髏',hp:13,maxhp:13,physicalArmor:13,magicArmor:13,mod:3,spellLevel:3,notes:''},
+  {name:'殭屍',hp:22,maxhp:22,physicalArmor:8,magicArmor:8,mod:3,spellLevel:3,notes:''},
+];
+let npcs=[{id:1,name:'護衛騎士',skills:[],attacks:[{name:'劍擊',base:8,mod:2}]}];
+let nextNid=2;
+let roundNum=1;
+
+// Monsters (each has own weakness + armorDebuffs)
+let monsters=[
+  {id:1,name:'惡龍',hp:200,maxhp:200,physicalArmor:5,magicArmor:5,weakness:[],customWeak:[],armorDebuffs:[]}
+];
+let nextMid=2;
+
+// Per-player BUFFs: {id,name,value,rounds}
+let playerBuffs={monk:[],cleric:[],ranger:[],assn1:[],assn2:[],mage:[]};
+let nextBid=1;
+
+// Per-player and companion special skills: {id,name,desc}
+let playerSkills={monk:[],cleric:[],ranger:[],assn1:[],assn2:[],mage:[],owl:[]};
+let nextSkid=1;
+
+// Per-player selected target IDs (Set)
+let playerTargets={monk:new Set(),cleric:new Set(),ranger:new Set(),assn1:new Set(),assn2:new Set(),mage:new Set()};
+
+// ══════════════ HELPERS ══════════════
+const $=id=>document.getElementById(id);
+const iv=id=>{const e=$(id);return e?(parseInt(e.value)||0):0;};
+const sv=id=>{const e=$(id);return e?(e.value||'無'):'無';};
+const escHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const escAttr=escHTML;
+const eventId=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
+function defaultSyncMeta(){
+  return {
+    deviceId:eventId(),oauthClientId:'',campaignId:'',fileId:'',lastSyncedRevision:0,
+    lastSyncedAt:'',dirty:false,conflict:false,
+  };
+}
+function loadSyncMeta(){
+  try{
+    const parsed=JSON.parse(localStorage.getItem(CLOUD_SYNC_META_KEY)||'null');
+    return parsed&&typeof parsed==='object'?{...defaultSyncMeta(),...parsed}:defaultSyncMeta();
+  }catch{return defaultSyncMeta();}
+}
+function persistSyncMeta(){
+  if(syncMeta)localStorage.setItem(CLOUD_SYNC_META_KEY,JSON.stringify(syncMeta));
+}
+syncMeta=loadSyncMeta();
+function getMon(id){return monsters.find(m=>m.id===id);}
+function getPhysicalArmor(entity){return Number(entity?.physicalArmor??entity?.ac??0)||0;}
+function getMagicArmor(entity){return Number(entity?.magicArmor??entity?.ac??0)||0;}
+function withSplitArmor(entity){
+  const migrated={...entity,physicalArmor:getPhysicalArmor(entity),magicArmor:getMagicArmor(entity)};
+  delete migrated.ac;
+  return migrated;
+}
+function getEffectivePhysicalArmor(m){return getPhysicalArmor(m)-m.armorDebuffs.reduce((s,d)=>s+d.reduction,0);}
+function getTotalArpen(m){return m.armorDebuffs.reduce((s,d)=>s+d.reduction,0);}
+function weakToMon(el,m){return el!=='無'&&(m.weakness.includes(el)||m.customWeak.includes(el));}
+function getBuffTotal(pfx){return playerBuffs[pfx].filter(b=>b.rounds>0).reduce((s,b)=>s+b.value,0);}
+function getBuffLabel(pfx){
+  const bs=playerBuffs[pfx].filter(b=>b.rounds>0);
+  if(!bs.length)return'';
+  return bs.map(b=>`${b.name||'?'}+${b.value}`).join('、');
+}
+
+function injectEls(){
+  const custom=[...new Set(monsters.flatMap(monster=>monster.customWeak||[]))].filter(value=>!ELS.includes(value));
+  const values=[...ELS,...custom];
+  const opt=values.map(e=>`<option value="${escAttr(e)}">${escHTML(e)}</option>`).join('');
+  ['monk-r-el','monk-l-el','cleric-el','ranger-el','owl-el',
+   'assn1-r-el','assn1-l-el','assn2-r-el','assn2-l-el','mage-el'].forEach(id=>{
+    const select=$(id);if(!select)return;
+    const current=select.value;
+    select.innerHTML=opt;
+    if(values.includes(current))select.value=current;
+  });
+}
+
+function pill(el,wk){
+  const c=ECOL[el]||'#888',b=EBG[el]||'#eee';
+  return `<span style="font-size:13px;font-weight:600;padding:2px 8px;border-radius:99px;background:${wk?c:b};color:${wk?'#fff':c};border:.5px solid ${c};">${escHTML(el)}${wk?' ★易傷':''}</span>`;
+}
+
+// ══════════════ IMAGES ══════════════
+function safeImageSrc(value){
+  const src=String(value||'');
+  return /^data:image\/(?:png|jpeg|webp|gif);base64,/i.test(src)||/^assets\/images\/[a-z0-9._/-]+$/i.test(src)?src:'';
+}
+function entityImageHtml(key,label,extraClass=''){
+  const src=safeImageSrc(entityImages[key]);
+  const inputId=`image-${key.replace(/[^a-z0-9_-]/gi,'-')}`;
+  return `<div class="avatar-wrap ${extraClass}" data-image-key="${escAttr(key)}">
+    ${src?`<img class="avatar-img" src="${escAttr(src)}" alt="${escAttr(label)}">`:`<span class="avatar-placeholder">📷</span>`}
+    ${src?`<button type="button" class="avatar-remove" title="移除圖片" onclick="removeEntityImage('${key}');event.stopPropagation()">✕</button>`:''}
+    <button type="button" class="avatar-edit" title="選擇圖片" onclick="$('${inputId}').click()">✎</button>
+    <input type="file" id="${inputId}" accept="image/png,image/jpeg,image/webp,image/gif" hidden onchange="handleImageInput('${key}',this)">
+  </div>`;
+}
+function renderPlayerImages(){
+  PLAYERS.forEach(pfx=>{
+    const nameInput=$(pfx+'-cname');
+    const head=nameInput?.closest('.cls-hd');
+    if(!head)return;
+    let holder=head.querySelector(`[data-player-image="${pfx}"]`);
+    if(!holder){
+      holder=document.createElement('div');
+      holder.dataset.playerImage=pfx;
+      head.insertBefore(holder,head.firstChild);
+    }
+    holder.innerHTML=entityImageHtml(`player:${pfx}`,nameInput.value||pfx);
+  });
+}
+async function optimizeImage(file){
+  if(!file?.type?.startsWith('image/'))throw new Error('請選擇圖片檔');
+  if(file.size>5*1024*1024)throw new Error('圖片不可超過 5 MB');
+  let source;
+  let revokeUrl='';
+  if(globalThis.createImageBitmap){
+    source=await createImageBitmap(file);
+  }else{
+    revokeUrl=URL.createObjectURL(file);
+    source=await new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>resolve(img);
+      img.onerror=()=>reject(new Error('圖片讀取失敗'));
+      img.src=revokeUrl;
+    });
+  }
+  const maxSide=800;
+  const scale=Math.min(1,maxSide/Math.max(source.width,source.height));
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,Math.round(source.width*scale));
+  canvas.height=Math.max(1,Math.round(source.height*scale));
+  canvas.getContext('2d').drawImage(source,0,0,canvas.width,canvas.height);
+  source.close?.();
+  if(revokeUrl)URL.revokeObjectURL(revokeUrl);
+  return canvas.toDataURL('image/webp',.82);
+}
+async function handleImageInput(key,input){
+  const file=input.files?.[0];
+  input.value='';
+  if(!file)return;
+  try{
+    entityImages[key]=await optimizeImage(file);
+    if(key.startsWith('player:'))renderPlayerImages();else renderMonsters();
+    addLog(`🖼 已更新「${key.startsWith('monster:')?(getMon(parseInt(key.split(':')[1]))?.name||'怪物'):($(key.split(':')[1]+'-cname')?.value||'角色')}」圖片`,'image',{key});
+    saveState({backupReason:'圖片更新'});
+  }catch(error){
+    alert(error.message||'圖片處理失敗');
+  }
+}
+function removeEntityImage(key){
+  if(!entityImages[key])return;
+  delete entityImages[key];
+  if(key.startsWith('player:'))renderPlayerImages();else renderMonsters();
+  addLog('🖼 已移除圖片','image',{key});
+  saveState({backupReason:'圖片移除'});
+}
+
+// ══════════════ MONSTER SYSTEM ══════════════
+function addMonster(){
+  const monster={id:nextMid++,name:'新怪物',hp:100,maxhp:100,physicalArmor:5,magicArmor:5,weakness:[],customWeak:[],armorDebuffs:[]};
+  monsters.push(monster);
+  renderMonsters();
+  refreshAllTargets();
+  renderCombatNPCs();
+  addLog(`➕ 新增怪物「${monster.name}」`,'monster',{monsterId:monster.id});
+}
+function removeMon(id){
+  const removed=getMon(id);
+  monsters=monsters.filter(m=>m.id!==id);
+  PLAYERS.forEach(p=>playerTargets[p].delete(id));
+  delete entityImages[`monster:${id}`];
+  renderMonsters();
+  refreshAllTargets();
+  renderCombatNPCs();
+  refreshAll();
+  if(removed)addLog(`➖ 移除怪物「${removed.name}」`,'monster',{monsterId:id});
+}
+function updMon(id,f,v){
+  const m=getMon(id);if(!m)return;
+  const previous=m[f];
+  if(f==='name')m[f]=v;
+  else{
+    const parsed=parseFloat(v)||0;
+    m[f]=f==='maxhp'?Math.max(1,parsed):Math.max(0,parsed);
+  }
+  if(['hp','maxhp','physicalArmor','magicArmor'].includes(f))renderMonsters();
+  else if(f==='name'){renderMonsters();refreshAllTargets();renderCombatNPCs();}
+  refreshAll();
+  if(String(previous)!==String(m[f]))addLog(`更新怪物「${m.name}」${f}：${previous} → ${m[f]}`,'monster',{monsterId:id,field:f,previous,value:m[f]});
+}
+function togMonWeak(id,el){
+  const m=getMon(id);if(!m)return;
+  const removed=m.weakness.includes(el);
+  m.weakness=removed?m.weakness.filter(x=>x!==el):[...m.weakness,el];
+  renderMonsters();refreshAll();
+  addLog(`${removed?'移除':'加入'} ${m.name} 的弱點「${el}」`,'monster',{monsterId:id,element:el});
+}
+function rmMonCWeak(id,index){
+  const m=getMon(id);if(!m)return;
+  const removed=m.customWeak[index];
+  m.customWeak=m.customWeak.filter((_,i)=>i!==index);
+  injectEls();renderMonsters();refreshAll();
+  if(removed)addLog(`移除 ${m.name} 的自訂弱點「${removed}」`,'monster',{monsterId:id});
+}
+function addMonCWeak(id){
+  const inp=$(id+'-cwk-in');if(!inp)return;
+  const v=inp.value.trim();if(!v)return;
+  const m=getMon(id);if(!m)return;
+  if(!m.customWeak.includes(v)){
+    m.customWeak.push(v);
+    injectEls();
+    addLog(`加入 ${m.name} 的自訂弱點「${v}」`,'monster',{monsterId:id});
+  }
+  inp.value='';renderMonsters();refreshAll();
+}
+function doMonHeal(id){
+  const m=getMon(id);if(!m)return;
+  const amtEl=$(id+'-heal-amt'),tpEl=$(id+'-heal-tp');
+  if(!amtEl||!tpEl)return;
+  const amt=parseInt(amtEl.value)||0,tp=tpEl.value;
+  m.hp=tp==='heal'?Math.min(m.maxhp,m.hp+amt):Math.max(0,m.hp-amt);
+  amtEl.value='';
+  addLog(tp==='heal'?`${m.name} 回復 ${amt} HP → ${m.hp} HP`:`${m.name} 受 ${amt} 傷 → ${m.hp} HP`);
+  renderMonsters();
+}
+
+function renderMonsters(){
+  const ct=$('monsters-list');if(!ct)return;
+  if(!monsters.length){ct.innerHTML='<div style="font-size:14px;color:var(--t2);padding:8px 0;">尚無怪物，請點擊「新增怪物」</div>';return;}
+  ct.innerHTML=monsters.map(m=>{
+    const pct=Math.min(100,Math.max(0,Math.round(m.hp/m.maxhp*100)));
+    const bc=pct>60?'#639922':pct>30?'#ef9f27':'#e24b4a';
+    const physicalArmor=getPhysicalArmor(m);
+    const magicArmor=getMagicArmor(m);
+    const effectivePhysicalArmor=getEffectivePhysicalArmor(m);
+    const stdWeak=ELS.filter(e=>e!=='無').map(e=>{
+      const a=m.weakness.includes(e),c=ECOL[e];
+      return `<span class="el-tag" onclick="togMonWeak(${m.id},'${e}')" style="border:.5px solid ${c};background:${a?c:'transparent'};color:${a?'#fff':c};">${e}</span>`;
+    }).join('');
+    const custWeak=m.customWeak.map((n,index)=>
+      `<span style="font-size:13px;font-weight:500;padding:4px 10px;border-radius:99px;cursor:pointer;background:#6b6b67;color:#fff;border:.5px solid #6b6b67;" onclick="rmMonCWeak(${m.id},${index})">${escHTML(n)} ✕</span>`
+    ).join('');
+    const debuffHtml=m.armorDebuffs.length
+      ?m.armorDebuffs.map(d=>`<span class="debuff-badge">🛡 被${escHTML(d.fromName)}降低物理護甲 −${d.reduction}（剩${d.roundsLeft}回合）</span>`).join('')
+      :'';
+    return `<div class="mon-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        ${entityImageHtml(`monster:${m.id}`,m.name,'mon-avatar')}
+        <input type="text" value="${escAttr(m.name)}" style="font-weight:700;font-size:16px;flex:1;min-width:100px;" onchange="updMon(${m.id},'name',this.value)">
+        <button class="btn btn-r" style="font-size:12px;padding:4px 10px;" onclick="removeMon(${m.id})">✕ 移除</button>
+      </div>
+      <div class="g5" style="margin-bottom:8px;">
+        <div><label class="fl">最大 HP</label><input type="number" value="${m.maxhp}" min="1" onchange="updMon(${m.id},'maxhp',this.value)"></div>
+        <div><label class="fl">目前 HP</label><input type="number" value="${m.hp}" min="0" onchange="updMon(${m.id},'hp',this.value)"></div>
+        <div><label class="fl">物理護甲${effectivePhysicalArmor<physicalArmor?` <span style="color:#c0392b;">(有效${effectivePhysicalArmor})</span>`:''}</label><input type="number" value="${physicalArmor}" min="0" onchange="updMon(${m.id},'physicalArmor',this.value)"></div>
+        <div><label class="fl">魔法護甲</label><input type="number" value="${magicArmor}" min="0" onchange="updMon(${m.id},'magicArmor',this.value)"></div>
+        <div style="display:flex;flex-direction:column;justify-content:flex-end;">
+          <div style="display:flex;gap:5px;">
+            <input type="number" id="${m.id}-heal-amt" placeholder="HP值" style="flex:1;">
+            <select id="${m.id}-heal-tp" style="width:80px;"><option value="heal">回血</option><option value="dmg">傷害</option></select>
+            <button class="btn btn-b" style="font-size:12px;padding:5px 10px;" onclick="doMonHeal(${m.id})">確認</button>
+          </div>
+        </div>
+      </div>
+      <div class="hp-wrap"><div class="hp-bar" style="width:${pct}%;background:${bc};"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:13px;color:var(--t2);">${pct}% HP (${m.hp}/${m.maxhp})</span>
+        <span style="font-size:14px;">${m.hp<=0?'<b style="color:#a32d2d;">☠ 死亡</b>':pct<30?'<span style="color:#ba7517;">⚠ 瀕死</span>':''}</span>
+      </div>
+      ${debuffHtml?`<div style="margin-bottom:8px;">${debuffHtml}</div>`:''}
+      <label class="fl">屬性弱點（點選切換）</label>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin:5px 0 7px;">${stdWeak}${custWeak?` ${custWeak}`:''}</div>
+      <div style="display:flex;gap:7px;align-items:center;">
+        <input type="text" id="${m.id}-cwk-in" placeholder="自訂弱點…" style="flex:1;max-width:180px;">
+        <button class="btn btn-g" onclick="addMonCWeak(${m.id})">+ 加入</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════ TARGET SELECTION ══════════════
+function refreshAllTargets(){
+  PLAYERS.forEach(p=>renderTargets(p));
+}
+function renderTargets(pfx){
+  const ct=$(pfx+'-targets');if(!ct)return;
+  if(!monsters.length){ct.innerHTML='<span style="font-size:13px;color:var(--t3);">無怪物</span>';return;}
+  ct.innerHTML=monsters.map(m=>{
+    const checked=playerTargets[pfx].has(m.id);
+    return `<label class="target-chk-label${checked?' checked':''}">
+      <input type="checkbox" ${checked?'checked':''} onchange="togTarget('${pfx}',${m.id},this.checked)" style="width:14px;height:14px;accent-color:#378ADD;">
+      ${escHTML(m.name)}
+    </label>`;
+  }).join('');
+}
+function togTarget(pfx,mid,checked){
+  if(checked)playerTargets[pfx].add(mid);
+  else playerTargets[pfx].delete(mid);
+  // update label style
+  renderTargets(pfx);
+  refreshAll();
+}
+
+// ══════════════ BUFF SYSTEM ══════════════
+function addBuff(pfx){
+  const buff={id:nextBid++,name:'BUFF',value:0,rounds:1};
+  playerBuffs[pfx].push(buff);
+  renderBuffs(pfx);
+  addLog(`➕ ${$(pfx+'-cname')?.value||pfx} 新增 BUFF`,'buff',{player:pfx,buffId:buff.id});
+}
+function rmBuff(pfx,id){
+  const removed=playerBuffs[pfx].find(b=>b.id===id);
+  playerBuffs[pfx]=playerBuffs[pfx].filter(b=>b.id!==id);
+  renderBuffs(pfx);refreshAll();
+  if(removed)addLog(`➖ ${$(pfx+'-cname')?.value||pfx} 移除 BUFF「${removed.name}」`,'buff',{player:pfx,buffId:id});
+}
+function updBuff(pfx,id,f,v){
+  const b=playerBuffs[pfx].find(x=>x.id===id);if(!b)return;
+  b[f]=f==='name'?v:(parseInt(v)||0);
+  renderPlayerFormulas(pfx);
+  saveState();
+}
+function renderBuffs(pfx){
+  const ct=$(pfx+'-buffs');if(!ct)return;
+  const bs=playerBuffs[pfx];
+  if(!bs.length){ct.innerHTML='<div style="font-size:13px;color:var(--t3);">無 BUFF</div>';return;}
+  ct.innerHTML=bs.map(b=>`
+    <div class="buff-item">
+      <input type="text" value="${escAttr(b.name)}" placeholder="BUFF名稱" onchange="updBuff('${pfx}',${b.id},'name',this.value)" style="font-size:13px;">
+      <div style="position:relative;">
+        <input type="number" value="${b.value}" oninput="updBuff('${pfx}',${b.id},'value',this.value)" style="font-size:13px;" placeholder="傷害">
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--t3);pointer-events:none;">傷</span>
+      </div>
+      <div style="position:relative;">
+        <input type="number" value="${b.rounds}" min="0" oninput="updBuff('${pfx}',${b.id},'rounds',this.value)" style="font-size:13px;${b.rounds<=0?'color:#c0392b;':''}" placeholder="回合">
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--t3);pointer-events:none;">回</span>
+      </div>
+      <button class="btn btn-r" style="font-size:12px;padding:4px 8px;" onclick="rmBuff('${pfx}',${b.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+// ══════════════ FORMULA RENDERING ══════════════
+function buildFormulaBlock(m, hands, mod, pot, buffTotal, buffLabel, skl, arpen, extra, extraLabel){
+  const totalArpen=getTotalArpen(m)+arpen;
+  const physicalArmor=getPhysicalArmor(m);
+  const magicArmor=getMagicArmor(m);
+  const effectivePhysicalArmor=getEffectivePhysicalArmor(m);
+  const arpenStr=m.armorDebuffs.map(d=>`被${escHTML(d.fromName)}降物防−${d.reduction}`).join('、');
+
+  let handSum=hands.reduce((s,h)=>s+h.fin,0);
+  const shared=mod+pot+buffTotal+skl+totalArpen+extra;
+  const total=handSum+shared;
+
+  let html=`<div class="ftgt-block">
+    <div class="ftgt-head">
+      <span style="color:#e24b4a;font-weight:700;">【${escHTML(m.name)}】</span>
+      <span style="font-size:12px;color:var(--t3);font-weight:400;">物防 ${physicalArmor}${effectivePhysicalArmor<physicalArmor?` → 有效 <b style="color:#c0392b;">${effectivePhysicalArmor}</b>`:''} · 魔防 ${magicArmor}</span>
+      ${arpenStr?`<span class="debuff-badge" style="font-size:11px;">${arpenStr}</span>`:''}
+    </div>
+    <div class="ftgt-body">`;
+
+  hands.forEach(h=>{
+    html+=`<div class="fline">${h.label}：${pill(h.el,h.wk)}
+      骰<b>${h.roll}</b> + 強<b>${h.enh}</b> = <b>${h.base}</b>`;
+    if(h.wk) html+=` × 1.5 = <b style="color:#c0392b;">${h.fin}</b>`;
+    html+=`</div>`;
+  });
+
+  // Shared parts
+  const parts=[];
+  if(mod!==0)parts.push(`調整值 <b>${mod>0?'+'+mod:mod}</b>`);
+  if(pot>0)parts.push(`藥水 <b>+${pot}</b>`);
+  if(buffTotal>0)parts.push(`BUFF [${escHTML(buffLabel)}] <b>+${buffTotal}</b>`);
+  if(skl>0)parts.push(`技能傷害 <b>+${skl}</b>`);
+  if(totalArpen>0)parts.push(`降低物防 <b>+${totalArpen}</b>`);
+  if(extra>0)parts.push(`${extraLabel||'加成'} <b>+${extra}</b>`);
+  if(parts.length)html+=`<div class="fline" style="margin-top:4px;">+ ${parts.join(' + ')}</div>`;
+
+  html+=`<div class="ftotal" style="color:${total>0?'#c0392b':'var(--t3)'};">= ${total>0?'−'+total+' HP':'0（無傷害）'}</div>`;
+  html+=`</div></div>`;
+  return {html,total};
+}
+
+function getPlayerAttackResult(pfx,m){
+  const buffTotal=getBuffTotal(pfx);
+  const buffLabel=getBuffLabel(pfx);
+  let hands=[],mod=0,pot=0,skl=0,arpen=0,arpenRounds=0,extra=0,extraLabel='';
+  if(pfx==='monk'){
+    const roll=iv('monk-roll'),rEnh=iv('monk-r-enhance'),lEnh=iv('monk-l-enhance');
+    mod=iv('monk-mod');pot=iv('monk-potion');skl=iv('monk-skill');
+    arpen=iv('monk-arpen');arpenRounds=iv('monk-arpen-rounds');
+    const rel=sv('monk-r-el'),lel=sv('monk-l-el');
+    const rBase=roll+rEnh,lBase=roll+lEnh;
+    const rWk=weakToMon(rel,m),lWk=weakToMon(lel,m);
+    hands=[
+      {label:'右手',el:rel,roll,enh:rEnh,base:rBase,fin:rWk?Math.round(rBase*1.5):rBase,wk:rWk},
+      {label:'左手',el:lel,roll,enh:lEnh,base:lBase,fin:lWk?Math.round(lBase*1.5):lBase,wk:lWk},
+    ];
+  }else if(pfx==='assn1'||pfx==='assn2'){
+    const rr=iv(pfx+'-r-roll'),lr=iv(pfx+'-l-roll');
+    const rEnh=iv(pfx+'-r-enhance'),lEnh=iv(pfx+'-l-enhance');
+    mod=iv(pfx+'-mod');pot=iv(pfx+'-potion');
+    arpen=iv(pfx+'-arpen');arpenRounds=iv(pfx+'-arpen-rounds');
+    const rel=sv(pfx+'-r-el'),lel=sv(pfx+'-l-el');
+    const rBase=rr+rEnh,lBase=lr+lEnh;
+    const rWk=weakToMon(rel,m),lWk=weakToMon(lel,m);
+    hands=[
+      {label:'右手',el:rel,roll:rr,enh:rEnh,base:rBase,fin:rWk?Math.round(rBase*1.5):rBase,wk:rWk},
+      {label:'左手',el:lel,roll:lr,enh:lEnh,base:lBase,fin:lWk?Math.round(lBase*1.5):lBase,wk:lWk},
+    ];
+    const sneak=iv(pfx+'-sneak'),other=iv(pfx+'-extra');
+    extra=sneak+other;
+    extraLabel=sneak>0&&other>0?`偷襲(${sneak})+額外(${other})`:sneak>0?'偷襲':'額外傷害';
+  }else{
+    const roll=iv(pfx+'-roll'),enh=iv(pfx+'-enhance');
+    mod=iv(pfx+'-mod');pot=iv(pfx+'-potion');skl=iv(pfx+'-skill');
+    if(pfx==='ranger')skl+=iv('ranger-mark-dmg');
+    const el=sv(pfx+'-el'),base=roll+enh,wk=weakToMon(el,m);
+    hands=[{label:'武器',el,roll,enh,base,fin:wk?Math.round(base*1.5):base,wk}];
+    if(pfx==='cleric'){
+      undeads.forEach(u=>{extra+=Math.max(0,(parseInt(u.roll)||0)+(parseInt(u.mod)||0));});
+      extraLabel='魁儡';
+    }
+    if(pfx==='ranger'){
+      const owlBase=iv('owl-atk')+iv('owl-roll')+iv('owl-atk-mod');
+      const owlEl=sv('owl-el'),owlWk=weakToMon(owlEl,m);
+      extra=owlWk?Math.round(owlBase*1.5):owlBase;
+      extraLabel='靈寵';
+      const of=$('owl-formula');
+      if(of)of.innerHTML=`${pill(owlEl,owlWk)} 爪<b>${iv('owl-atk')}</b>+骰<b>${iv('owl-roll')}</b>+調<b>${iv('owl-atk-mod')}</b>=<b>${owlBase}</b>${owlWk?` ×1.5=<b style="color:#c0392b">${extra}</b>`:''}`;
+    }
+  }
+  const display=buildFormulaBlock(m,hands,mod,pot,buffTotal,buffLabel,skl,arpen,extra,extraLabel);
+  return {...display,hands,mod,pot,buffTotal,buffLabel,skl,arpen,arpenRounds,extra,extraLabel};
+}
+
+function renderPlayerFormulas(pfx){
+  const fl=$(pfx+'-formula-list');if(!fl)return;
+  const targets=[...playerTargets[pfx]].map(id=>getMon(id)).filter(Boolean);
+  if(!targets.length){
+    fl.innerHTML='<div style="font-size:13px;color:var(--t3);margin-top:8px;">尚未選擇攻擊目標</div>';
+    const ct=$(pfx+'-ct');if(ct){ct.textContent='0';ct.style.color='var(--t3)';}
+    return;
+  }
+  const results=targets.map(m=>getPlayerAttackResult(pfx,m));
+  const grandTotal=results.reduce((sum,result)=>sum+result.total,0);
+  let allHtml=results.map(result=>result.html).join('');
+  if(targets.length>1){
+    allHtml+=`<div style="font-size:15px;font-weight:700;padding:8px 12px;margin-top:4px;background:var(--bg2);border-radius:var(--r-md);color:${grandTotal>0?'#c0392b':'var(--t3)'};">合計全目標：${grandTotal>0?'−'+grandTotal+' HP':'0'}</div>`;
+  }
+  fl.innerHTML=allHtml;
+  const ct=$(pfx+'-ct');
+  if(ct){
+    ct.textContent=grandTotal>0?`−${grandTotal} HP`:'0';
+    ct.style.color=grandTotal>0?'#c0392b':'var(--t3)';
+  }
+}
+
+// ══════════════ REFRESH ALL ══════════════
+function refreshAll(){
+  PLAYERS.forEach(p=>{
+    renderBuffs(p);
+    renderPlayerFormulas(p);
+  });
+  renderUndeads();
+  saveState();
+}
+
+// ══════════════ ROUND MANAGEMENT ══════════════
+function nextRound(){
+  roundNum++;
+  $('round-num').textContent=roundNum;
+  // Decrement all armor debuffs
+  monsters.forEach(m=>{
+    m.armorDebuffs=m.armorDebuffs.map(d=>({...d,roundsLeft:d.roundsLeft-1})).filter(d=>d.roundsLeft>0);
+  });
+  // Decrement all BUFFs
+  PLAYERS.forEach(p=>{
+    playerBuffs[p]=playerBuffs[p].map(b=>({...b,rounds:b.rounds-1})).filter(b=>b.rounds>0);
+  });
+  renderMonsters();
+  PLAYERS.forEach(p=>renderBuffs(p));
+  refreshAll();
+  addLog(`⏭ 第 ${roundNum} 回合開始`);
+}
+
+// ══════════════ APPLY ALL ══════════════
+function applyAll(){
+  const actions=[];
+  PLAYERS.forEach(pfx=>{
+    const targets=[...playerTargets[pfx]].map(id=>getMon(id)).filter(Boolean);
+    targets.forEach(m=>{
+      actions.push({pfx,name:$(pfx+'-cname')?.value||pfx,monster:m,result:getPlayerAttackResult(pfx,m)});
+    });
+  });
+  if(!commitAttackActions(actions)){
+    alert('所有傷害均為 0，或尚未選擇攻擊目標');
+    return;
+  }
+
+  // Clear attack rolls
+  ['monk-roll','monk-skill','cleric-roll','cleric-skill','ranger-roll','ranger-skill','mage-roll','mage-skill',
+   'assn1-r-roll','assn1-l-roll','assn1-sneak','assn1-extra','assn2-r-roll','assn2-l-roll','assn2-sneak','assn2-extra'].forEach(id=>{const e=$(id);if(e)e.value=0;});
+
+  renderMonsters();
+  refreshAll();
+}
+
+// ══════════════ APPLY SINGLE PLAYER ══════════════
+function applyPlayer(pfx){
+  const targets=[...playerTargets[pfx]].map(id=>getMon(id)).filter(Boolean);
+  if(!targets.length){alert('請先勾選攻擊目標');return;}
+  const name=$(pfx+'-cname')?$(pfx+'-cname').value||pfx:pfx;
+  const actions=targets.map(monster=>({pfx,name,monster,result:getPlayerAttackResult(pfx,monster)}));
+  if(!commitAttackActions(actions)){alert('傷害為 0');return;}
+
+  // Clear this player's rolls
+  const clearMap={
+    monk:['monk-roll','monk-skill'],
+    cleric:['cleric-roll','cleric-skill'],
+    ranger:['ranger-roll','ranger-skill'],
+    mage:['mage-roll','mage-skill'],
+    assn1:['assn1-r-roll','assn1-l-roll','assn1-sneak','assn1-extra'],
+    assn2:['assn2-r-roll','assn2-l-roll','assn2-sneak','assn2-extra'],
+  };
+  (clearMap[pfx]||[]).forEach(id=>{const e=$(id);if(e)e.value=0;});
+
+  renderMonsters();
+  refreshAll();
+}
+
+function commitAttackActions(actions){
+  const applied=actions.filter(action=>action.result.total>0);
+  if(!applied.length)return false;
+  // All results are calculated before any mutation so「套用全部」matches the preview.
+  applied.forEach(({pfx,name,monster,result})=>{
+    monster.hp=Math.max(0,monster.hp-result.total);
+    addLog(`${name} 對 ${monster.name} 造成 ${result.total} 點傷害 → 剩 ${monster.hp} HP`,'damage',{
+      player:pfx,targetId:monster.id,amount:result.total,hpAfter:monster.hp,
+      formula:{hands:result.hands,mod:result.mod,potion:result.pot,buff:result.buffTotal,skill:result.skl,armorPenetration:result.arpen,extra:result.extra}
+    });
+  });
+  applied.forEach(({pfx,name,monster,result})=>{
+    if(result.arpen>0&&result.arpenRounds>0){
+      monster.armorDebuffs.push({fromPlayer:pfx,fromName:name,reduction:result.arpen,roundsLeft:result.arpenRounds});
+    }
+  });
+  return true;
+}
+
+// ══════════════ HP BARS ══════════════
+function updHP(pfx){
+  const c=parseInt($(pfx+'-hp').value)||0,m=parseInt($(pfx+'-maxhp').value)||1;
+  const pct=Math.min(100,Math.max(0,Math.round(c/m*100)));
+  const bar=$(pfx+'-hpbar');if(bar)bar.style.cssText=`width:${pct}%;background:${pct>60?'#639922':pct>30?'#ef9f27':'#e24b4a'};`;
+  const txt=$(pfx+'-hp-txt');if(txt)txt.textContent=`${pct}% HP (${c}/${m})`;
+  if(pfx==='ranger'){
+    const owlMax=Math.max(1,Math.floor(m/2));
+    $('owl-maxhp').value=owlMax;
+    $('owl-hp').value=Math.min(parseInt($('owl-hp').value)||0,owlMax);
+    updOwlHP();
+  }
+  saveState();
+}
+function updOwlHP(){
+  const c=parseInt($('owl-hp').value)||0,m=parseInt($('owl-maxhp').value)||1;
+  const pct=Math.min(100,Math.max(0,Math.round(c/m*100)));
+  $('owl-hpbar').style.cssText=`width:${pct}%;background:${pct>60?'#4CAF50':pct>30?'#ef9f27':'#e24b4a'};`;
+  $('owl-hp-txt').textContent=`${pct}% HP (${c}/${m})`;
+  saveState();
+}
+function owlHelp(){addLog(`🦉 ${$('owl-name').value||'靈寵'}：輔助攻擊！${$('ranger-cname').value||'遊俠'}下次攻擊獲得優勢。`);}
+function owlKO(){$('owl-hp').value=0;updOwlHP();addLog(`🦉 ${$('owl-name').value||'靈寵'} 倒地！`);}
+function owlRevive(){$('owl-hp').value=$('owl-maxhp').value;updOwlHP();addLog(`🦉 ${$('owl-name').value||'靈寵'} 復活！`);}
+
+// ══════════════ KI ══════════════
+function renderKi(){
+  $('ki-pips').innerHTML=kiState.map((on,i)=>
+    `<div class="pip${on?' on':''}" onclick="togKi(${i})" title="${on?'點擊消耗':'已消耗，點擊恢復'}">${i+1}</div>`
+  ).join('');
+}
+function togKi(i){
+  kiState[i]=!kiState[i];
+  renderKi();
+  addLog(`武僧氣點 ${kiState[i]?'恢復':'消耗'} 1 點（剩 ${kiState.filter(Boolean).length}/${kiState.length}）`,'resource',{resource:'ki',remaining:kiState.filter(Boolean).length,maximum:kiState.length});
+}
+function updateKiMax(){
+  const input=$('monk-ki-max');if(!input)return;
+  const next=Math.min(50,Math.max(1,parseInt(input.value)||1));
+  input.value=next;
+  const previous=kiState.length;
+  if(next>previous)kiState=[...kiState,...Array(next-previous).fill(true)];
+  else if(next<previous)kiState=kiState.slice(0,next);
+  renderKi();
+  saveState();
+}
+function resetKi(){
+  kiState=Array(Math.max(1,iv('monk-ki-max'))).fill(true);
+  renderKi();
+  addLog(`武僧氣點全部重置（${kiState.length} 點）`,'resource',{resource:'ki',remaining:kiState.length,maximum:kiState.length});
+}
+
+// ══════════════ CRYSTAL ══════════════
+function updCrystal(){
+  const v=Math.max(0,iv('monk-cki')),max=Math.max(1,iv('monk-cmax'));
+  $('monk-cpips').innerHTML=Array.from({length:max},(_,i)=>
+    `<div class="pip${i<v?' on':''}" style="cursor:default;">${i+1}</div>`
+  ).join('');
+  saveState();
+}
+
+// ══════════════ SPELL SLOTS ══════════════
+function getSlotState(who){
+  if(who==='cleric')return{slots:clericSlots,max:clericSlotMax,color:'#9B72CF',name:$('cleric-cname')?.value||'牧師'};
+  if(who==='ranger')return{slots:rangerSlots,max:rangerSlotMax,color:'#4CAF50',name:$('ranger-cname')?.value||'遊俠'};
+  return{slots:mageSlots,max:mageSlotMax,color:'#2196F3',name:$('mage-cname')?.value||'法師'};
+}
+function renderClericSlots(){const state=getSlotState('cleric');renderSlots('cleric',state.slots,state.max,state.color);}
+function renderRangerSlots(){const state=getSlotState('ranger');renderSlots('ranger',state.slots,state.max,state.color);}
+function renderMageSlots(){const state=getSlotState('mage');renderSlots('mage',state.slots,state.max,state.color);}
+function renderSlots(who,slots,maxArr,col){
+  const ct=$(who+'-slots');if(!ct)return;
+  let html='';
+  for(let lv=0;lv<9;lv++){
+    html+=`<div class="slot-row"><span class="slot-lv" style="color:${col};">Lv${lv+1}</span>`;
+    html+=`<span class="slot-max-wrap">最大 <input class="slot-max-input" type="number" min="0" max="20" value="${maxArr[lv]||0}" onchange="setSlotMax('${who}',${lv},this.value)"></span>`;
+    for(let i=0;i<maxArr[lv];i++){
+      const av=i<slots[lv];
+      html+=`<div class="slot-pip${av?' av':''}" onclick="togSlot('${who}',${lv},${i})" title="${av?`點擊消耗 Lv${lv+1}`:'已消耗，點擊恢復'}">${av?'✦':''}</div>`;
+    }
+    html+=`<span style="font-size:13px;color:var(--t3);">${slots[lv]}/${maxArr[lv]}</span></div>`;
+  }
+  ct.innerHTML=html;
+}
+function renderCasterSlots(who){
+  if(who==='cleric')renderClericSlots();
+  else if(who==='ranger')renderRangerSlots();
+  else renderMageSlots();
+}
+function setSlotMax(who,lv,value){
+  const state=getSlotState(who);
+  const previous=state.max[lv]||0;
+  const next=Math.min(20,Math.max(0,parseInt(value)||0));
+  const wasFull=state.slots[lv]===previous;
+  state.max[lv]=next;
+  state.slots[lv]=wasFull?next:Math.min(state.slots[lv]||0,next);
+  renderCasterSlots(who);
+  addLog(`${state.name} Lv${lv+1} 法術位上限：${previous} → ${next}`,'resource',{resource:'spell-slot-max',caster:who,level:lv+1,previous,value:next});
+}
+function togSlot(who,lv,i){
+  const state=getSlotState(who);
+  if(i<state.slots[lv]){state.slots[lv]--;addLog(`${state.name} 消耗 Lv${lv+1} 法術位（剩 ${state.slots[lv]}/${state.max[lv]}）`,'resource',{resource:'spell-slot',caster:who,level:lv+1,remaining:state.slots[lv]});}
+  else if(state.slots[lv]<state.max[lv]){state.slots[lv]++;addLog(`${state.name} 恢復 Lv${lv+1} 法術位（剩 ${state.slots[lv]}/${state.max[lv]}）`,'resource',{resource:'spell-slot',caster:who,level:lv+1,remaining:state.slots[lv]});}
+  renderCasterSlots(who);
+  saveState();
+}
+function consumeSpellSlot(who,spellLevel,reason='施法'){
+  const state=getSlotState(who);
+  const lv=Math.min(8,Math.max(0,(parseInt(spellLevel)||1)-1));
+  if((state.slots[lv]||0)<=0){
+    alert(`${state.name} 的 Lv${lv+1} 法術位不足`);
+    return false;
+  }
+  state.slots[lv]--;
+  renderCasterSlots(who);
+  addLog(`${state.name} 使用 Lv${lv+1} 法術位：${reason}（剩 ${state.slots[lv]}/${state.max[lv]}）`,'resource',{resource:'spell-slot',caster:who,level:lv+1,remaining:state.slots[lv],reason});
+  return true;
+}
+function resetSlots(who,shouldLog=true){
+  const state=getSlotState(who);
+  for(let lv=0;lv<9;lv++)state.slots[lv]=state.max[lv]||0;
+  renderCasterSlots(who);
+  if(shouldLog)addLog(`${state.name} 法術位全部補滿`,'resource',{resource:'spell-slot-reset',caster:who});
+  else saveState();
+}
+
+function restAll(){
+  resetSlots('cleric',false);resetSlots('ranger',false);resetSlots('mage',false);
+  kiState=Array(Math.max(1,iv('monk-ki-max'))).fill(true);renderKi();
+  $('monk-cki').value=0;updCrystal();
+  undeads=[];renderUndeads();
+  // Clear all debuffs
+  monsters.forEach(m=>{m.armorDebuffs=[];});
+  // Clear all BUFFs
+  PLAYERS.forEach(p=>{playerBuffs[p]=[];});
+  roundNum=1;$('round-num').textContent=1;
+  renderMonsters();
+  PLAYERS.forEach(p=>renderBuffs(p));
+  refreshAll();
+  addLog('🌙 長休 — 法術位、氣點、魁儡、BUFF、物理扣甲全部重置','resource',{resources:['spell-slot','ki']});
+}
+
+// ══════════════ UNDEAD ══════════════
+function addUndead(){
+  const maxhp=Math.max(1,iv('undead-new-maxhp'));
+  summonUndead({
+    name:$('undead-new-name')?.value.trim()||'新魁儡',
+    hp:maxhp,maxhp,
+    physicalArmor:Math.max(0,iv('undead-new-parmor')),
+    magicArmor:Math.max(0,iv('undead-new-marmor')),
+    mod:iv('undead-new-mod'),
+    spellLevel:Math.min(9,Math.max(1,iv('undead-new-spell-level'))),
+    notes:$('undead-new-notes')?.value||'',
+  },'自訂建立');
+}
+function summonUndead(data,source='模板'){
+  const spellLevel=Math.min(9,Math.max(1,parseInt(data.spellLevel)||1));
+  if(!consumeSpellSlot('cleric',spellLevel,`召喚魁儡「${data.name||'未命名'}」`))return false;
+  const maxhp=Math.max(1,parseFloat(data.maxhp)||1);
+  const suppliedHp=parseFloat(data.hp);
+  const undead={
+    id:nextUid++,
+    name:data.name||'新魁儡',
+    hp:Math.min(maxhp,Math.max(0,Number.isFinite(suppliedHp)?suppliedHp:maxhp)),
+    maxhp,
+    physicalArmor:Math.max(0,getPhysicalArmor(data)),
+    magicArmor:Math.max(0,getMagicArmor(data)),
+    roll:0,
+    mod:parseFloat(data.mod)||0,
+    spellLevel,
+    notes:data.notes||'',
+  };
+  undeads.push(undead);
+  renderUndeads();
+  renderPlayerFormulas('cleric');
+  addLog(`💀 ${source}並召喚魁儡「${undead.name}」（Lv${spellLevel}）`,'undead',{undeadId:undead.id,spellLevel,source});
+  return true;
+}
+function showUndeadPicker(){
+  const panel=$('undead-template-panel');
+  const willOpen=panel.style.display==='none';
+  panel.style.display=willOpen?'block':'none';
+  if(willOpen)renderUndeadTemplates();
+}
+function renderUndeadTemplates(){
+  const panel=$('undead-template-panel');if(!panel)return;
+  if(!undeadTemplates.length){
+    panel.innerHTML='<div class="manage-meta">尚無模板。先召喚魁儡，再按魁儡卡片上的 💾 儲存。</div>';
+    return;
+  }
+  panel.innerHTML=`<div class="sec">魁儡模板（可改名、排序、召喚或刪除）</div>${undeadTemplates.map((t,index)=>`
+    <div class="manage-row">
+      <input type="text" value="${escAttr(t.name)}" maxlength="80" onchange="renameUndeadTemplate(${index},this.value)" aria-label="魁儡模板名稱">
+      <div class="manage-meta">Lv${t.spellLevel||1} · HP ${t.maxhp} · 物防 ${getPhysicalArmor(t)} · 魔防 ${getMagicArmor(t)}${t.notes?`<br>${escHTML(t.notes)}`:''}</div>
+      <div class="manage-actions">
+        <button class="btn" onclick="moveUndeadTemplate(${index},-1)" ${index===0?'disabled':''} title="往上移">↑</button>
+        <button class="btn" onclick="moveUndeadTemplate(${index},1)" ${index===undeadTemplates.length-1?'disabled':''} title="往下移">↓</button>
+        <button class="btn btn-p" onclick="summonUndeadTemplate(${index})">召喚</button>
+        <button class="btn btn-r" onclick="deleteUndeadTemplate(${index})">刪除</button>
+      </div>
+    </div>`).join('')}`;
+}
+function summonUndeadTemplate(index){
+  const template=undeadTemplates[index];if(!template)return;
+  summonUndead(template,'套用模板');
+}
+function renameUndeadTemplate(index,value){
+  const template=undeadTemplates[index];if(!template)return;
+  const name=value.trim();
+  if(!name){alert('模板名稱不能空白');renderUndeadTemplates();return;}
+  if(undeadTemplates.some((item,itemIndex)=>itemIndex!==index&&item.name===name)){
+    alert(`已經有名為「${name}」的模板`);
+    renderUndeadTemplates();
+    return;
+  }
+  const previous=template.name;
+  if(previous===name)return;
+  template.name=name;
+  renderUndeadTemplates();
+  addLog(`✏️ 魁儡模板重新命名：${previous} → ${name}`,'undead-template',{index,previous,value:name});
+}
+function moveUndeadTemplate(index,direction){
+  const target=index+direction;
+  if(index<0||target<0||index>=undeadTemplates.length||target>=undeadTemplates.length)return;
+  const [template]=undeadTemplates.splice(index,1);
+  undeadTemplates.splice(target,0,template);
+  renderUndeadTemplates();
+  addLog(`↕️ 調整魁儡模板「${template.name}」順序`,'undead-template',{from:index,to:target});
+}
+function deleteUndeadTemplate(index){
+  const template=undeadTemplates[index];if(!template)return;
+  if(!confirm(`確定刪除魁儡模板「${template.name}」？`))return;
+  undeadTemplates.splice(index,1);
+  renderUndeadTemplates();
+  addLog(`🗑 刪除魁儡模板「${template.name}」`,'undead-template',{index});
+}
+function saveUndeadTemplate(id){
+  const u=undeads.find(x=>x.id===id);if(!u)return;
+  const existing=undeadTemplates.findIndex(t=>t.name===u.name);
+  const tpl={
+    name:u.name,hp:u.maxhp,maxhp:u.maxhp,
+    physicalArmor:getPhysicalArmor(u),magicArmor:getMagicArmor(u),
+    mod:u.mod||0,spellLevel:u.spellLevel||1,notes:u.notes||'',
+  };
+  if(existing>=0)undeadTemplates[existing]=tpl;else undeadTemplates.push(tpl);
+  if($('undead-template-panel')?.style.display!=='none')renderUndeadTemplates();
+  addLog(`💾 儲存魁儡模板「${u.name}」`,'undead',{undeadId:id});
+  alert(`「${u.name}」已儲存為模板`);
+}
+function renderUndeads(){
+  const ct=$('undead-list');if(!ct)return;
+  if(!undeads.length){ct.innerHTML='<div style="font-size:14px;color:var(--t2);">尚無魁儡</div>';return;}
+  ct.innerHTML=undeads.map(u=>{
+    const pct=Math.min(100,Math.max(0,Math.round(u.hp/u.maxhp*100)));
+    const bc=pct>60?'#639922':pct>30?'#ef9f27':'#e24b4a';
+    const uDmg=Math.max(0,(parseInt(u.roll)||0)+(parseInt(u.mod)||0));
+    return `<div class="ssub">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;">
+        <span style="font-size:16px;">💀</span>
+        <input type="text" value="${escAttr(u.name)}" style="font-weight:600;font-size:15px;flex:1;border-color:transparent;background:transparent;" onchange="updUD(${u.id},'name',this.value)">
+        <button class="btn btn-p" style="font-size:11px;padding:3px 8px;" onclick="saveUndeadTemplate(${u.id})">💾</button>
+        <button class="btn btn-r" style="font-size:11px;padding:3px 8px;" onclick="rmUD(${u.id})">✕</button>
+      </div>
+      <div class="g4" style="margin-bottom:6px;">
+        <div><label class="fl">目前 HP</label><input type="number" value="${u.hp}" min="0" onchange="updUD(${u.id},'hp',this.value)"></div>
+        <div><label class="fl">最大 HP</label><input type="number" value="${u.maxhp}" min="1" onchange="updUD(${u.id},'maxhp',this.value)"></div>
+        <div><label class="fl">物理護甲</label><input type="number" value="${getPhysicalArmor(u)}" min="0" onchange="updUD(${u.id},'physicalArmor',this.value)"></div>
+        <div><label class="fl">魔法護甲</label><input type="number" value="${getMagicArmor(u)}" min="0" onchange="updUD(${u.id},'magicArmor',this.value)"></div>
+      </div>
+      <div style="background:var(--bg3);border-radius:99px;height:10px;overflow:hidden;margin:0 0 5px;">
+        <div style="height:100%;border-radius:99px;background:${bc};width:${pct}%;"></div>
+      </div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:8px;">${pct}% HP</div>
+      <div class="g2" style="margin-bottom:8px;">
+        <div><label class="fl">模板召喚環位</label><input type="number" value="${u.spellLevel||1}" min="1" max="9" onchange="updUD(${u.id},'spellLevel',this.value)"></div>
+        <div><label class="fl">資訊／能力備註</label><textarea rows="2" oninput="updUD(${u.id},'notes',this.value)" placeholder="抗性、移動、特殊能力……">${escHTML(u.notes||'')}</textarea></div>
+      </div>
+      <div style="background:var(--bg2);border-radius:var(--r-md);padding:8px 10px;">
+        <div style="font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;">攻擊面板</div>
+        <div class="g2" style="margin-bottom:6px;">
+          <div><label class="fl">攻擊骰</label><input type="number" value="${u.roll||0}" min="0" oninput="updUD(${u.id},'roll',this.value)"></div>
+          <div><label class="fl">調整值</label><input type="number" value="${u.mod||0}" oninput="updUD(${u.id},'mod',this.value)"></div>
+        </div>
+        <div style="font-size:14px;color:var(--t2);">骰<b>${u.roll||0}</b>+調<b>${u.mod||0}</b> = <b style="color:${uDmg>0?'#c0392b':'var(--t3)'};">${uDmg>0?uDmg+' 傷害':'0'}</b></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function updUD(id,f,v){
+  const u=undeads.find(x=>x.id===id);if(!u)return;
+  const previous=u[f];
+  u[f]=['name','notes'].includes(f)?v:(parseFloat(v)||0);
+  if(f==='maxhp')u[f]=Math.max(1,u[f]);
+  if(['physicalArmor','magicArmor','hp'].includes(f))u[f]=Math.max(0,u[f]);
+  if(f==='spellLevel')u[f]=Math.min(9,Math.max(1,u[f]));
+  if(['hp','maxhp','physicalArmor','magicArmor','spellLevel'].includes(f))renderUndeads();
+  if(['roll','mod'].includes(f))renderPlayerFormulas('cleric');
+  saveState();
+  if(String(previous)!==String(u[f])&&!['roll','mod','notes'].includes(f))addLog(`更新魁儡「${u.name}」${f}：${previous} → ${u[f]}`,'undead',{undeadId:id,field:f,previous,value:u[f]});
+}
+function rmUD(id){
+  const removed=undeads.find(x=>x.id===id);
+  undeads=undeads.filter(x=>x.id!==id);renderUndeads();refreshAll();
+  if(removed)addLog(`➖ 移除魁儡「${removed.name}」`,'undead',{undeadId:id});
+}
+
+// ══════════════ SPECIAL SKILLS ══════════════
+function skillOwnerName(pfx){
+  if(pfx==='owl')return $('owl-name')?.value||'靈寵';
+  return $(pfx+'-cname')?.value||pfx;
+}
+function addSkill(pfx){
+  const skill={id:nextSkid++,name:'技能名稱',desc:''};
+  if(!playerSkills[pfx])playerSkills[pfx]=[];
+  playerSkills[pfx].push(skill);
+  renderSkills(pfx);saveState();
+  addLog(`➕ ${skillOwnerName(pfx)} 新增特殊技能`,'skill',{player:pfx,skillId:skill.id});
+}
+function rmSkill(pfx,id){
+  const removed=playerSkills[pfx].find(s=>s.id===id);
+  playerSkills[pfx]=playerSkills[pfx].filter(s=>s.id!==id);
+  renderSkills(pfx);saveState();
+  if(removed)addLog(`➖ ${skillOwnerName(pfx)} 移除技能「${removed.name}」`,'skill',{player:pfx,skillId:id});
+}
+function updSkill(pfx,id,f,v){
+  const s=playerSkills[pfx].find(x=>x.id===id);
+  if(s){s[f]=v;saveState();}
+}
+function renderSkills(pfx){
+  const ct=$(pfx+'-skills');if(!ct)return;
+  const skills=playerSkills[pfx]||[];
+  if(!skills.length){ct.innerHTML='<div style="font-size:13px;color:var(--t3);padding:4px 0;">尚無特殊技能</div>';return;}
+  ct.innerHTML=skills.map(s=>`
+    <div style="border:.5px solid var(--bd1);border-radius:var(--r-md);padding:9px 11px;margin-bottom:7px;background:var(--bg2);">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+        <input type="text" value="${escAttr(s.name)}" placeholder="技能名稱" style="font-weight:700;font-size:14px;flex:1;" oninput="updSkill('${pfx}',${s.id},'name',this.value)">
+        <button class="btn btn-r" style="font-size:11px;padding:3px 8px;" onclick="rmSkill('${pfx}',${s.id})">✕</button>
+      </div>
+      <textarea rows="2" placeholder="技能描述、備忘…" style="font-size:13px;min-height:48px;" oninput="updSkill('${pfx}',${s.id},'desc',this.value)">${escHTML(s.desc)}</textarea>
+    </div>`).join('');
+}
+
+// ══════════════ CLERIC HEAL ══════════════
+function calcHeal(){
+  const roll=iv('cleric-heal-roll'),enh=iv('cleric-heal-enh'),mod=iv('cleric-heal-mod');
+  const total=roll+enh+mod;
+  const f=$('cleric-heal-formula');
+  if(!f)return;
+  const parts=[];
+  parts.push(`治療量 <b>${roll}</b>`);
+  if(enh!==0)parts.push(`聖徽強化 <b>${enh>0?'+'+enh:enh}</b>`);
+  if(mod!==0)parts.push(`調整 <b>${mod>0?'+'+mod:mod}</b>`);
+  f.innerHTML=parts.join(' + ')+` = <span style="font-size:18px;font-weight:700;color:${total>0?'#27500A':'var(--t3)'};">${total>0?'💚 +'+total+' HP':'0'}</span>`;
+}
+function logHeal(){
+  const roll=iv('cleric-heal-roll'),enh=iv('cleric-heal-enh'),mod=iv('cleric-heal-mod');
+  const total=roll+enh+mod;
+  if(total<=0){alert('補血量為 0');return;}
+  const name=$('cleric-cname').value||'牧師';
+  addLog(`💚 ${name} 補血 ${total} HP（治療${roll} + 聖徽${enh} + 調整${mod}）`);
+  $('cleric-heal-roll').value=0;
+  $('cleric-heal-enh').value=0;
+  $('cleric-heal-mod').value=0;
+  calcHeal();
+}
+
+// ══════════════ NPC ══════════════
+function renderCombatNPCs(){
+  const ct=$('combat-npcs');if(!ct)return;
+  if(!npcs.length){ct.innerHTML='<div style="font-size:14px;color:var(--t2);">尚無友軍 NPC</div>';return;}
+  ct.innerHTML=npcs.map(n=>{
+    const atks=(n.attacks||[]).map((a,index)=>
+      `<button class="btn" style="font-size:13px;" onclick="npcAtk(${n.id},${index})">${escHTML(a.name)} (+${(a.base||0)+(a.mod||0)})</button>`
+    ).join('');
+    const targetOptions=monsters.map(m=>`<option value="${m.id}">${escHTML(m.name)}</option>`).join('');
+    return `<div style="border:.5px solid var(--bd1);border-radius:var(--r-md);padding:10px 12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:13px;font-weight:600;padding:3px 9px;border-radius:var(--r-md);background:var(--bg2);">NPC</span>
+        <input type="text" value="${escAttr(n.name)}" onchange="updNPCName(${n.id},this.value)" style="font-weight:600;font-size:15px;max-width:220px;">
+        <button class="btn btn-r" style="margin-left:auto;padding:4px 9px;font-size:12px;" onclick="rmNPC(${n.id})">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <label class="fl" style="margin:0;white-space:nowrap;">攻擊目標</label>
+        <select id="npc-${n.id}-target" style="max-width:240px;">${targetOptions||'<option value="">尚無怪物</option>'}</select>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${atks||'<span style="font-size:13px;color:var(--t2);">無攻擊設定</span>'}</div>
+      <button class="btn btn-g" style="margin-top:7px;font-size:12px;" onclick="addNPCAtk(${n.id})">+ 新增攻擊</button>
+    </div>`;
+  }).join('');
+}
+function npcAtk(id,attackIndex){
+  const n=npcs.find(x=>x.id===id);
+  const attack=n?.attacks?.[attackIndex];
+  const target=getMon(parseInt($(`npc-${id}-target`)?.value));
+  if(!n||!attack||!target){alert('請先建立並選擇怪物目標');return;}
+  const net=(parseInt(attack.base)||0)+(parseInt(attack.mod)||0);
+  if(net<=0){addLog(`${n.name}「${attack.name}」攻擊未造成傷害`,'damage',{npcId:id,targetId:target.id,amount:0});return;}
+  target.hp=Math.max(0,target.hp-net);
+  renderMonsters();
+  addLog(`${n.name}「${attack.name}」對 ${target.name} 造成 ${net} 傷害 → 剩餘 ${target.hp} HP`,'damage',{npcId:id,targetId:target.id,amount:net,hpAfter:target.hp});
+}
+function addNPC(){
+  const npc={id:nextNid++,name:'新 NPC',skills:[],attacks:[{name:'攻擊',base:5,mod:2}]};
+  npcs.push(npc);renderCombatNPCs();
+  addLog(`➕ 新增友軍 NPC「${npc.name}」`,'npc',{npcId:npc.id});
+}
+function updNPCName(id,name){
+  const npc=npcs.find(n=>n.id===id);if(!npc)return;
+  const previous=npc.name;
+  npc.name=name;saveState();
+  if(previous!==name)addLog(`更新 NPC 名稱：${previous} → ${name}`,'npc',{npcId:id,previous,value:name});
+}
+function rmNPC(id){
+  const removed=npcs.find(n=>n.id===id);
+  npcs=npcs.filter(n=>n.id!==id);renderCombatNPCs();
+  if(removed)addLog(`➖ 移除友軍 NPC「${removed.name}」`,'npc',{npcId:id});
+}
+function addNPCAtk(id){
+  const n=npcs.find(x=>x.id===id);if(!n)return;
+  const nm=prompt('攻擊名稱','新攻擊');if(!nm)return;
+  const b=parseInt(prompt('基礎傷害','5'))||5,m=parseInt(prompt('調整值','0'))||0;
+  n.attacks.push({name:nm,base:b,mod:m});renderCombatNPCs();
+  addLog(`➕ ${n.name} 新增攻擊「${nm}」`,'npc',{npcId:id});
+}
+
+// ══════════════ STRUCTURED EVENT LOG ══════════════
+function addLog(message,type='action',details={}){
+  const createdAt=new Date().toISOString();
+  log.unshift({id:eventId(),type,message,round:roundNum,createdAt,details});
+  if(log.length>2000)log.length=2000;
+  if($('tab-log').style.display!=='none')renderLog();
+  saveState();
+}
+function setLogFilter(filter){
+  if(!['all','spell','ki'].includes(filter))return;
+  logFilter=filter;
+  renderLog();
+}
+function logMatchesFilter(entry){
+  if(logFilter==='all')return true;
+  const resource=entry.details?.resource||'';
+  const resources=Array.isArray(entry.details?.resources)?entry.details.resources:[];
+  if(logFilter==='spell')return resource.startsWith('spell-slot')||resources.includes('spell-slot');
+  if(logFilter==='ki')return resource==='ki'||resources.includes('ki');
+  return true;
+}
+function renderLog(){
+  const filtered=log.filter(logMatchesFilter);
+  ['all','spell','ki'].forEach(filter=>$(`log-filter-${filter}`)?.classList.toggle('on',filter===logFilter));
+  const summary=$('log-summary');
+  if(summary)summary.textContent=logFilter==='all'?`共 ${log.length} 筆`:`顯示 ${filtered.length}／${log.length} 筆`;
+  $('log-list').innerHTML=filtered.length
+    ?filtered.map(l=>{
+      const message=l.message??l.msg??'';
+      const stamp=l.createdAt?new Date(l.createdAt).toLocaleString('zh-TW',{hour12:false}):(l.ts||'');
+      const round=l.round??'?';
+      return `<div class="log-row"><span>${escHTML(message)}</span><span class="log-meta">R${escHTML(round)} · ${escHTML(stamp)}</span></div>`;
+    }).join('')
+    :`<div style="font-size:14px;color:var(--t2);">${log.length?'此分類尚無紀錄':'尚無紀錄'}</div>`;
+}
+async function clearLog(){
+  if(!log.length)return;
+  if(!confirm('確定要清除戰鬥紀錄？\n系統會先建立一份自動備份。'))return;
+  await createAutoBackup('清除戰鬥紀錄前',true);
+  log=[];renderLog();saveState();
+}
+
+// ══════════════ TABS ══════════════
+function showTab(name){
+  ['combat','log'].forEach((t,i)=>{
+    $('tab-'+t).style.display=t===name?'block':'none';
+    document.querySelectorAll('.tab')[i].classList.toggle('on',t===name);
+  });
+  if(name==='log')renderLog();
+}
+
+// ══════════════ INDEXEDDB + BACKUP ══════════════
+const LEGACY_SAVE_KEY='trpg_dmg_v1';
+const DB_NAME='trpg_dm_calculator';
+const DB_VERSION=1;
+const STATE_STORE='state';
+const BACKUP_STORE='backups';
+const CURRENT_STATE_KEY='current';
+const MAX_BACKUPS=20;
+const MAX_MANUAL_SNAPSHOTS=30;
+const AUTO_BACKUP_MS=5*60*1000;
+let dbPromise=null;
+const INPUT_IDS=[
+  'campaign-name',
+  'monk-cname','monk-hp','monk-maxhp','monk-parmor','monk-marmor','monk-spd','monk-ki-max','monk-roll','monk-mod',
+  'monk-r-enhance','monk-l-enhance','monk-potion','monk-skill','monk-arpen','monk-arpen-rounds',
+  'monk-cki','monk-cmax','monk-r-el','monk-l-el',
+  'cleric-cname','cleric-hp','cleric-maxhp','cleric-parmor','cleric-marmor','cleric-roll','cleric-mod',
+  'cleric-enhance','cleric-potion','cleric-skill','cleric-heal-roll','cleric-heal-enh','cleric-heal-mod','cleric-el',
+  'undead-new-name','undead-new-maxhp','undead-new-parmor','undead-new-marmor','undead-new-mod','undead-new-spell-level','undead-new-notes',
+  'ranger-cname','ranger-hp','ranger-maxhp','ranger-parmor','ranger-marmor','ranger-roll','ranger-mod',
+  'ranger-enhance','ranger-potion','ranger-skill','ranger-mark-dmg','ranger-el',
+  'owl-name','owl-hp','owl-maxhp','owl-parmor','owl-marmor','owl-atk','owl-spd','owl-roll','owl-atk-mod','owl-el',
+  'assn1-cname','assn1-hp','assn1-maxhp','assn1-parmor','assn1-marmor',
+  'assn1-r-roll','assn1-l-roll','assn1-r-enhance','assn1-l-enhance',
+  'assn1-mod','assn1-potion','assn1-sneak','assn1-extra','assn1-arpen','assn1-arpen-rounds',
+  'assn1-r-el','assn1-l-el',
+  'assn2-cname','assn2-hp','assn2-maxhp','assn2-parmor','assn2-marmor',
+  'assn2-r-roll','assn2-l-roll','assn2-r-enhance','assn2-l-enhance',
+  'assn2-mod','assn2-potion','assn2-sneak','assn2-extra','assn2-arpen','assn2-arpen-rounds',
+  'assn2-r-el','assn2-l-el',
+  'mage-cname','mage-hp','mage-maxhp','mage-parmor','mage-marmor','mage-recovery','mage-roll','mage-mod',
+  'mage-enhance','mage-potion','mage-skill','mage-el',
+];
+function openDatabase(){
+  if(dbPromise)return dbPromise;
+  dbPromise=new Promise((resolve,reject)=>{
+    if(!globalThis.indexedDB){reject(new Error('此瀏覽器不支援 IndexedDB'));return;}
+    const request=indexedDB.open(DB_NAME,DB_VERSION);
+    request.onupgradeneeded=()=>{
+      const db=request.result;
+      if(!db.objectStoreNames.contains(STATE_STORE))db.createObjectStore(STATE_STORE);
+      if(!db.objectStoreNames.contains(BACKUP_STORE))db.createObjectStore(BACKUP_STORE,{keyPath:'id'});
+    };
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error||new Error('IndexedDB 開啟失敗'));
+  });
+  return dbPromise;
+}
+async function idbGet(store,key){
+  const db=await openDatabase();
+  return new Promise((resolve,reject)=>{
+    const request=db.transaction(store,'readonly').objectStore(store).get(key);
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error);
+  });
+}
+async function idbGetAll(store){
+  const db=await openDatabase();
+  return new Promise((resolve,reject)=>{
+    const request=db.transaction(store,'readonly').objectStore(store).getAll();
+    request.onsuccess=()=>resolve(request.result||[]);
+    request.onerror=()=>reject(request.error);
+  });
+}
+async function idbPut(store,value,key){
+  const db=await openDatabase();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(store,'readwrite');
+    const objectStore=tx.objectStore(store);
+    if(key===undefined)objectStore.put(value);else objectStore.put(value,key);
+    tx.oncomplete=()=>resolve();
+    tx.onerror=()=>reject(tx.error);
+    tx.onabort=()=>reject(tx.error||new Error('IndexedDB 寫入中止'));
+  });
+}
+async function idbDelete(store,key){
+  const db=await openDatabase();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(store,'readwrite');
+    tx.objectStore(store).delete(key);
+    tx.oncomplete=()=>resolve();
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+async function idbClear(store){
+  const db=await openDatabase();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(store,'readwrite');
+    tx.objectStore(store).clear();
+    tx.oncomplete=()=>resolve();
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+function collectState(){
+  const inputs={};
+  INPUT_IDS.forEach(id=>{const element=$(id);if(element)inputs[id]=element.value;});
+  return {
+    schemaVersion:4,
+    roundNum,
+    clericSlotMax,rangerSlotMax,mageSlotMax,
+    clericSlots,rangerSlots,mageSlots,kiState,
+    undeads,nextUid,undeadTemplates,
+    npcs,nextNid,
+    monsters,nextMid,
+    playerBuffs,nextBid,
+    playerSkills,nextSkid,
+    playerTargets:Object.fromEntries(Object.entries(playerTargets).map(([key,value])=>[key,[...value]])),
+    entityImages,
+    log,
+    inputs,
+    savedAt:new Date().toISOString(),
+  };
+}
+function validateStateData(data){
+  const errors=[];
+  const isRecord=value=>value&&typeof value==='object'&&!Array.isArray(value);
+  const isSafeId=value=>Number.isSafeInteger(value)&&value>0&&value<=Number.MAX_SAFE_INTEGER;
+  const isFiniteNumber=value=>typeof value==='number'&&Number.isFinite(value)&&Math.abs(value)<=1e9;
+  const checkEntityNumbers=(key,items,fields,{needsId=true}={})=>{
+    if(!Array.isArray(items))return;
+    items.forEach((item,index)=>{
+      if(!isRecord(item))return;
+      if(needsId&&!isSafeId(item.id))errors.push(`${key}[${index}].id 無效`);
+      fields.forEach(field=>{
+        if(item[field]!==undefined&&!isFiniteNumber(item[field]))errors.push(`${key}[${index}].${field} 必須是數字`);
+      });
+      if(item.name!==undefined&&(typeof item.name!=='string'||item.name.length>500))errors.push(`${key}[${index}].name 無效`);
+    });
+  };
+  if(!isRecord(data))return ['存檔內容不是物件'];
+  if(data.schemaVersion!==undefined&&(!Number.isInteger(data.schemaVersion)||data.schemaVersion<1||data.schemaVersion>4))errors.push('不支援的 schemaVersion');
+  if(!isRecord(data.inputs))errors.push('缺少 inputs 設定');
+  if(!Array.isArray(data.monsters))errors.push('缺少 monsters 清單');
+  const limits={monsters:500,undeads:500,undeadTemplates:200,npcs:500,log:5000};
+  Object.entries(limits).forEach(([key,limit])=>{
+    if(data[key]!==undefined&&(!Array.isArray(data[key])||data[key].length>limit))errors.push(`${key} 格式錯誤或超過 ${limit} 筆`);
+  });
+  ['monsters','undeads','undeadTemplates','npcs','log'].forEach(key=>{
+    if(Array.isArray(data[key])&&data[key].some(item=>!isRecord(item)))errors.push(`${key} 含有無效項目`);
+  });
+  checkEntityNumbers('monsters',data.monsters,['hp','maxhp','physicalArmor','magicArmor','ac']);
+  checkEntityNumbers('undeads',data.undeads,['hp','maxhp','physicalArmor','magicArmor','ac','mod','roll','spellLevel']);
+  checkEntityNumbers('undeadTemplates',data.undeadTemplates,['hp','maxhp','physicalArmor','magicArmor','ac','mod','spellLevel'],{needsId:false});
+  checkEntityNumbers('npcs',data.npcs,[]);
+  if(Array.isArray(data.monsters))data.monsters.forEach((monster,index)=>{
+    ['weakness','customWeak'].forEach(field=>{
+      if(monster[field]!==undefined&&(!Array.isArray(monster[field])||monster[field].some(value=>typeof value!=='string'||value.length>100)))errors.push(`monsters[${index}].${field} 格式錯誤`);
+    });
+    if(monster.armorDebuffs!==undefined){
+      if(!Array.isArray(monster.armorDebuffs)||monster.armorDebuffs.length>200)errors.push(`monsters[${index}].armorDebuffs 格式錯誤`);
+      else monster.armorDebuffs.forEach((debuff,debuffIndex)=>{
+        if(!isRecord(debuff)||!isFiniteNumber(debuff.reduction)||!isFiniteNumber(debuff.roundsLeft))errors.push(`monsters[${index}].armorDebuffs[${debuffIndex}] 格式錯誤`);
+      });
+    }
+  });
+  if(Array.isArray(data.npcs))data.npcs.forEach((npc,index)=>{
+    if(npc.attacks!==undefined){
+      if(!Array.isArray(npc.attacks)||npc.attacks.length>100)errors.push(`npcs[${index}].attacks 格式錯誤`);
+      else npc.attacks.forEach((attack,attackIndex)=>{
+        if(!isRecord(attack)||typeof attack.name!=='string'||attack.name.length>500||!isFiniteNumber(attack.base)||!isFiniteNumber(attack.mod))errors.push(`npcs[${index}].attacks[${attackIndex}] 格式錯誤`);
+      });
+    }
+  });
+  if(data.playerBuffs!==undefined&&!isRecord(data.playerBuffs))errors.push('playerBuffs 格式錯誤');
+  if(data.playerSkills!==undefined&&!isRecord(data.playerSkills))errors.push('playerSkills 格式錯誤');
+  if(data.playerTargets!==undefined&&!isRecord(data.playerTargets))errors.push('playerTargets 格式錯誤');
+  PLAYERS.forEach(player=>{
+    const buffs=data.playerBuffs?.[player];
+    if(buffs!==undefined&&(!Array.isArray(buffs)||buffs.length>500||buffs.some(buff=>!isRecord(buff)||!isSafeId(buff.id)||!isFiniteNumber(buff.value)||!isFiniteNumber(buff.rounds)||typeof buff.name!=='string'||buff.name.length>500)))errors.push(`playerBuffs.${player} 格式錯誤`);
+    const skills=data.playerSkills?.[player];
+    if(skills!==undefined&&(!Array.isArray(skills)||skills.length>500||skills.some(skill=>!isRecord(skill)||!isSafeId(skill.id)||typeof skill.name!=='string'||skill.name.length>500||typeof skill.desc!=='string'||skill.desc.length>10000)))errors.push(`playerSkills.${player} 格式錯誤`);
+    const targets=data.playerTargets?.[player];
+    if(targets!==undefined&&(!Array.isArray(targets)||targets.length>500||targets.some(id=>!isSafeId(id))))errors.push(`playerTargets.${player} 格式錯誤`);
+  });
+  const owlSkills=data.playerSkills?.owl;
+  if(owlSkills!==undefined&&(!Array.isArray(owlSkills)||owlSkills.length>500||owlSkills.some(skill=>!isRecord(skill)||!isSafeId(skill.id)||typeof skill.name!=='string'||skill.name.length>500||typeof skill.desc!=='string'||skill.desc.length>10000)))errors.push('playerSkills.owl 格式錯誤');
+  ['nextUid','nextNid','nextMid','nextBid','nextSkid'].forEach(key=>{
+    if(data[key]!==undefined&&!isSafeId(data[key]))errors.push(`${key} 無效`);
+  });
+  if(data.entityImages!==undefined){
+    if(!isRecord(data.entityImages))errors.push('entityImages 格式錯誤');
+    else{
+      const images=Object.values(data.entityImages);
+      if(images.length>200)errors.push('圖片數量超過 200 張');
+      if(images.some(value=>typeof value!=='string'||value.length>3*1024*1024||!safeImageSrc(value)))errors.push('圖片內容或大小不符合限制');
+    }
+  }
+  if(data.inputs&&Object.keys(data.inputs).length>500)errors.push('inputs 欄位數量異常');
+  return [...new Set(errors)];
+}
+function assertValidStateData(data,label='存檔'){
+  const errors=validateStateData(data);
+  if(errors.length)throw new Error(`${label}驗證失敗：${errors.join('；')}`);
+  return data;
+}
+function assertValidCloudPayload(payload){
+  if(!payload||payload.app!=='trpg-dm-calculator'||payload.syncFormatVersion!==1)throw new Error('雲端檔案不是相容的 TRPG 同步存檔');
+  if(!Number.isInteger(payload.revision)||payload.revision<1)throw new Error('雲端存檔版本號無效');
+  if(typeof payload.campaignId!=='string'||!payload.campaignId)throw new Error('雲端存檔缺少 campaignId');
+  assertValidStateData(payload.state,'雲端存檔');
+  return payload;
+}
+function normalizeSlotArray(value,fallback){
+  return Array.from({length:9},(_,index)=>Math.min(20,Math.max(0,parseInt(value?.[index]??fallback?.[index]??0)||0)));
+}
+function applyState(data){
+  if(!data||typeof data!=='object')return;
+  if(data.roundNum!==undefined)roundNum=data.roundNum;
+  clericSlotMax=normalizeSlotArray(data.clericSlotMax,clericSlotMax);
+  rangerSlotMax=normalizeSlotArray(data.rangerSlotMax,rangerSlotMax);
+  mageSlotMax=normalizeSlotArray(data.mageSlotMax,mageSlotMax);
+  clericSlots=normalizeSlotArray(data.clericSlots,clericSlots).map((value,index)=>Math.min(value,clericSlotMax[index]));
+  rangerSlots=normalizeSlotArray(data.rangerSlots,rangerSlots).map((value,index)=>Math.min(value,rangerSlotMax[index]));
+  mageSlots=normalizeSlotArray(data.mageSlots,mageSlots).map((value,index)=>Math.min(value,mageSlotMax[index]));
+  if(Array.isArray(data.kiState))kiState=data.kiState;
+  if(Array.isArray(data.undeads))undeads=data.undeads.map(undead=>({
+    ...withSplitArmor(undead),
+    spellLevel:Math.min(9,Math.max(1,parseInt(undead.spellLevel)||1)),
+    notes:undead.notes||'',
+  }));
+  if(data.nextUid!==undefined)nextUid=data.nextUid;
+  if(Array.isArray(data.undeadTemplates))undeadTemplates=data.undeadTemplates.map(template=>({
+    ...withSplitArmor(template),
+    spellLevel:Math.min(9,Math.max(1,parseInt(template.spellLevel)||1)),
+    notes:template.notes||'',
+  }));
+  if(Array.isArray(data.npcs))npcs=data.npcs;
+  if(data.nextNid!==undefined)nextNid=data.nextNid;
+  if(Array.isArray(data.monsters))monsters=data.monsters.map(monster=>({
+    ...withSplitArmor(monster),
+    weakness:Array.isArray(monster.weakness)?monster.weakness:[],
+    customWeak:Array.isArray(monster.customWeak)?monster.customWeak:[],
+    armorDebuffs:Array.isArray(monster.armorDebuffs)?monster.armorDebuffs:[],
+  }));
+  if(data.nextMid!==undefined)nextMid=data.nextMid;
+  if(data.playerBuffs)playerBuffs={...playerBuffs,...data.playerBuffs};
+  if(data.nextBid!==undefined)nextBid=data.nextBid;
+  if(data.playerSkills)playerSkills={...playerSkills,...data.playerSkills};
+  if(data.nextSkid!==undefined)nextSkid=data.nextSkid;
+  if(data.playerTargets){
+    Object.entries(data.playerTargets).forEach(([key,value])=>{
+      if(playerTargets[key]&&Array.isArray(value))playerTargets[key]=new Set(value);
+    });
+  }
+  if(data.entityImages&&typeof data.entityImages==='object')entityImages=data.entityImages;
+  if(Array.isArray(data.log))log=data.log;
+  injectEls();
+  if(data.inputs){
+    const migratedInputs={...data.inputs};
+    ['monk','cleric','ranger','owl','assn1','assn2','mage'].forEach(prefix=>{
+      const legacy=migratedInputs[`${prefix}-ac`];
+      if(legacy===undefined)return;
+      if(migratedInputs[`${prefix}-parmor`]===undefined)migratedInputs[`${prefix}-parmor`]=legacy;
+      if(migratedInputs[`${prefix}-marmor`]===undefined)migratedInputs[`${prefix}-marmor`]=legacy;
+    });
+    Object.entries(migratedInputs).forEach(([id,value])=>{
+      const element=$(id);if(element)element.value=value;
+    });
+  }
+  if(!data.inputs||data.inputs['monk-ki-max']===undefined)$('monk-ki-max').value=Math.max(1,kiState.length);
+  const kiMax=Math.min(50,Math.max(1,iv('monk-ki-max')));
+  if(kiState.length<kiMax)kiState=[...kiState,...Array(kiMax-kiState.length).fill(true)];
+  else if(kiState.length>kiMax)kiState=kiState.slice(0,kiMax);
+}
+async function loadState(){
+  try{
+    let data=await idbGet(STATE_STORE,CURRENT_STATE_KEY);
+    if(!data){
+      const legacyRaw=localStorage.getItem(LEGACY_SAVE_KEY);
+      if(legacyRaw){
+        data=JSON.parse(legacyRaw);
+        await idbPut(STATE_STORE,data,CURRENT_STATE_KEY);
+        localStorage.removeItem(LEGACY_SAVE_KEY);
+        const indicator=$('backup-ind');
+        if(indicator)indicator.textContent='已搬移舊版存檔';
+      }
+    }
+    if(data){
+      assertValidStateData(data,'本機存檔');
+      hadStoredState=true;
+      applyState(data);
+    }
+    const backups=await idbGetAll(BACKUP_STORE);
+    if(backups.length){
+      lastBackupAt=Math.max(...backups.map(backup=>backup.id||0));
+      updateBackupIndicator(backups);
+    }
+  }catch(error){
+    console.error('loadState failed',error);
+    showStorageError(error);
+  }
+}
+function saveState(options={}){
+  if(!appReady)return;
+  stateDirty=true;
+  markCloudDirty();
+  if(options.backupReason)pendingBackupReason=options.backupReason;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    saveTimer=null;
+    queueStateWrite();
+  },180);
+}
+function queueStateWrite(){
+  const state=collectState();
+  const backupReason=pendingBackupReason;
+  pendingBackupReason='';
+  saveQueue=saveQueue.catch(()=>{}).then(async()=>{
+    await idbPut(STATE_STORE,state,CURRENT_STATE_KEY);
+    const indicator=$('save-ind');
+    if(indicator)indicator.textContent=`已存此裝置 ${new Date().toLocaleTimeString('zh-TW',{hour12:false})}`;
+    if(backupReason)await storeBackup(state,backupReason);
+  }).catch(error=>{
+    console.error('saveState failed',error);
+    showStorageError(error);
+    throw error;
+  });
+  return saveQueue;
+}
+async function flushSaveState(){
+  if(saveTimer){
+    clearTimeout(saveTimer);
+    saveTimer=null;
+    queueStateWrite();
+  }
+  await saveQueue.catch(()=>{});
+}
+async function storeBackup(state,reason,options={}){
+  const now=Math.max(Date.now(),lastBackupAt+1);
+  const backup={
+    id:now,
+    createdAt:new Date(now).toISOString(),
+    reason,
+    manual:Boolean(options.manual),
+    campaignName:options.campaignName||state.inputs?.['campaign-name']||'未命名戰役',
+    snapshotName:options.snapshotName||'',
+    data:state,
+  };
+  await idbPut(BACKUP_STORE,backup);
+  const backups=(await idbGetAll(BACKUP_STORE)).sort((a,b)=>b.id-a.id);
+  const manualBackups=backups.filter(item=>item.manual);
+  const autoBackups=backups.filter(item=>!item.manual);
+  const expired=[...manualBackups.slice(MAX_MANUAL_SNAPSHOTS),...autoBackups.slice(MAX_BACKUPS)];
+  await Promise.all(expired.map(item=>idbDelete(BACKUP_STORE,item.id)));
+  const expiredIds=new Set(expired.map(item=>item.id));
+  const retained=backups.filter(item=>!expiredIds.has(item.id));
+  lastBackupAt=now;
+  stateDirty=false;
+  updateBackupIndicator(retained);
+  return backup;
+}
+async function createAutoBackup(reason='定時自動備份',force=false){
+  if(!appReady)return false;
+  if(!force&&(!stateDirty||Date.now()-lastBackupAt<AUTO_BACKUP_MS))return false;
+  await flushSaveState();
+  await storeBackup(collectState(),reason);
+  return true;
+}
+function updateBackupIndicator(backups){
+  const indicator=$('backup-ind');
+  if(!indicator)return;
+  const latest=[...backups].sort((a,b)=>b.id-a.id)[0];
+  indicator.textContent=latest?`備份 ${new Date(latest.createdAt).toLocaleString('zh-TW',{hour12:false})}`:'尚無備份';
+}
+function getCampaignName(){
+  return $('campaign-name')?.value.trim()||'未命名戰役';
+}
+function toggleCampaignPanel(){
+  const panel=$('campaign-panel');
+  const willOpen=panel.style.display==='none';
+  panel.style.display=willOpen?'block':'none';
+  if(willOpen)renderSnapshotList();
+}
+async function createManualSnapshot(){
+  if(!appReady)return;
+  const nameInput=$('snapshot-name');
+  const campaignName=getCampaignName();
+  const snapshotName=nameInput.value.trim()||`快照 ${new Date().toLocaleString('zh-TW',{hour12:false})}`;
+  try{
+    await flushSaveState();
+    const snapshot=await storeBackup(collectState(),'手動快照',{
+      manual:true,
+      campaignName,
+      snapshotName,
+    });
+    nameInput.value='';
+    await renderSnapshotList();
+    addLog(`📸 已建立「${campaignName}／${snapshotName}」快照`,'backup',{snapshotId:snapshot.id,campaignName,snapshotName});
+  }catch(error){
+    alert(`建立快照失敗：${error.message||error}`);
+  }
+}
+async function renderSnapshotList(){
+  const list=$('snapshot-list');if(!list)return;
+  try{
+    const snapshots=(await idbGetAll(BACKUP_STORE)).filter(item=>item.manual).sort((a,b)=>b.id-a.id);
+    $('snapshot-count').textContent=`${snapshots.length}／${MAX_MANUAL_SNAPSHOTS} 份`;
+    list.innerHTML=snapshots.length?snapshots.map(snapshot=>{
+      const when=new Date(snapshot.createdAt).toLocaleString('zh-TW',{hour12:false});
+      return `<div class="manage-row">
+        <div><strong>${escHTML(snapshot.snapshotName||'未命名快照')}</strong><div class="manage-meta">${escHTML(snapshot.campaignName||'未命名戰役')}</div></div>
+        <div class="manage-meta">${escHTML(when)}</div>
+        <div class="manage-actions">
+          <button class="btn btn-g" onclick="restoreManualSnapshot(${snapshot.id})">切換／還原</button>
+          <button class="btn btn-r" onclick="deleteManualSnapshot(${snapshot.id})">刪除</button>
+        </div>
+      </div>`;
+    }).join(''):'<div class="manage-meta">尚無手動快照。輸入名稱後按「建立快照」。</div>';
+  }catch(error){
+    list.innerHTML=`<div class="storage-warn">讀取快照失敗：${escHTML(error.message||error)}</div>`;
+  }
+}
+async function restoreManualSnapshot(id){
+  try{
+    const snapshot=await idbGet(BACKUP_STORE,id);
+    if(!snapshot?.manual){alert('找不到這份手動快照');return;}
+    const label=`${snapshot.campaignName||'未命名戰役'}／${snapshot.snapshotName||'未命名快照'}`;
+    if(!confirm(`確定切換／還原「${label}」？\n目前狀態會先建立自動備份。`))return;
+    await flushSaveState();
+    await storeBackup(collectState(),'切換手動快照前');
+    await idbPut(STATE_STORE,snapshot.data,CURRENT_STATE_KEY);
+    markCloudDirty();
+    location.reload();
+  }catch(error){
+    alert(`還原快照失敗：${error.message||error}`);
+  }
+}
+async function deleteManualSnapshot(id){
+  try{
+    const snapshot=await idbGet(BACKUP_STORE,id);
+    if(!snapshot?.manual)return;
+    const label=`${snapshot.campaignName||'未命名戰役'}／${snapshot.snapshotName||'未命名快照'}`;
+    if(!confirm(`確定刪除手動快照「${label}」？\n刪除後無法復原。`))return;
+    await idbDelete(BACKUP_STORE,id);
+    const backups=await idbGetAll(BACKUP_STORE);
+    updateBackupIndicator(backups);
+    await renderSnapshotList();
+    addLog(`🗑 已刪除手動快照「${label}」`,'backup',{snapshotId:id});
+  }catch(error){
+    alert(`刪除快照失敗：${error.message||error}`);
+  }
+}
+function showStorageError(error){
+  const indicator=$('save-ind');
+  if(indicator){
+    indicator.textContent=`儲存失敗：${error?.message||'未知錯誤'}`;
+    indicator.classList.add('storage-warn');
+  }
+}
+async function exportData(){
+  await flushSaveState();
+  const payload={
+    app:'trpg-dm-calculator',
+    formatVersion:4,
+    campaignName:getCampaignName(),
+    exportedAt:new Date().toISOString(),
+    state:collectState(),
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+  const campaignPart=getCampaignName().replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'-').slice(0,60)||'trpg-dm';
+  link.href=url;
+  link.download=`${campaignPart}-${stamp}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  await createAutoBackup('手動匯出 JSON',true);
+  addLog('📤 已匯出 JSON 備份','backup');
+}
+async function handleImportFile(input){
+  const file=input.files?.[0];
+  input.value='';
+  if(!file)return;
+  try{
+    if(file.size>30*1024*1024)throw new Error('備份檔不可超過 30 MB');
+    const parsed=JSON.parse(await file.text());
+    const state=parsed?.app==='trpg-dm-calculator'?parsed.state:parsed;
+    assertValidStateData(state,'匯入檔案');
+    if(!confirm(`確定匯入「${file.name}」？\n目前狀態會先建立自動備份。`))return;
+    await createAutoBackup('匯入 JSON 前',true);
+    await idbPut(STATE_STORE,state,CURRENT_STATE_KEY);
+    markCloudDirty();
+    location.reload();
+  }catch(error){
+    alert(`匯入失敗：${error.message||error}`);
+  }
+}
+async function restoreLatestBackup(){
+  try{
+    const backups=(await idbGetAll(BACKUP_STORE)).sort((a,b)=>b.id-a.id);
+    const latest=backups[0];
+    if(!latest){alert('目前沒有可還原的自動備份');return;}
+    const when=new Date(latest.createdAt).toLocaleString('zh-TW',{hour12:false});
+    if(!confirm(`確定還原 ${when} 的備份？\n原因：${latest.reason}`))return;
+    await idbPut(STATE_STORE,latest.data,CURRENT_STATE_KEY);
+    markCloudDirty();
+    location.reload();
+  }catch(error){
+    alert(`還原失敗：${error.message||error}`);
+  }
+}
+async function clearSave(){
+  if(!confirm('確定要清除此裝置的目前狀態、全部本機備份、手動快照與圖片？\nGoogle Drive 雲端存檔不會刪除，重新同步時仍可下載。'))return;
+  await Promise.all([idbClear(STATE_STORE),idbClear(BACKUP_STORE)]);
+  localStorage.removeItem(LEGACY_SAVE_KEY);
+  syncMeta={...syncMeta,lastSyncedRevision:0,lastSyncedAt:'',dirty:false,conflict:false};
+  persistSyncMeta();
+  location.reload();
+}
+
+// ══════════════ GOOGLE DRIVE SYNC ══════════════
+function configuredGoogleClientId(){
+  return (localStorage.getItem(GOOGLE_CLIENT_ID_KEY)||globalThis.TRPG_CONFIG?.googleClientId||'').trim();
+}
+function isValidGoogleClientId(value){
+  return /^[a-z0-9._-]+\.apps\.googleusercontent\.com$/i.test(String(value||'').trim());
+}
+function configureCloudClient(){
+  const clientId=configuredGoogleClientId();
+  if(clientId&&syncMeta.oauthClientId&&syncMeta.oauthClientId!==clientId){
+    const deviceId=syncMeta.deviceId;
+    const dirty=syncMeta.dirty||hadStoredState;
+    syncMeta={...defaultSyncMeta(),deviceId,oauthClientId:clientId,dirty};
+    persistSyncMeta();
+  }else if(clientId&&!syncMeta.oauthClientId){
+    syncMeta.oauthClientId=clientId;
+    persistSyncMeta();
+  }
+  if(!globalThis.GoogleDriveSyncClient){
+    cloudSyncClient=null;
+    return null;
+  }
+  if(!cloudSyncClient)cloudSyncClient=new GoogleDriveSyncClient({clientId,fileName:CLOUD_STATE_FILE});
+  else cloudSyncClient.setClientId(clientId);
+  return cloudSyncClient;
+}
+function setCloudStatus(text,kind='',detail=''){
+  const indicator=$('sync-ind');
+  if(indicator){
+    indicator.textContent=text;
+    indicator.classList.remove('sync-ok','sync-warn','sync-error');
+    if(kind)indicator.classList.add(`sync-${kind}`);
+  }
+  const detailElement=$('sync-detail');
+  if(detailElement&&detail)detailElement.textContent=detail;
+}
+function updateCloudIdleStatus(){
+  if(!configuredGoogleClientId()){
+    setCloudStatus('雲端未設定','', '請先填入 Google OAuth Client ID。');
+    return;
+  }
+  if(syncMeta.conflict){
+    setCloudStatus('雲端版本衝突','warn','本機與雲端都有變更；請選擇下載雲端版本，或以本機覆蓋雲端。');
+    return;
+  }
+  if(!cloudSyncClient?.connected){
+    setCloudStatus(syncMeta.dirty?'雲端未連接・有本機變更':'雲端未連接',syncMeta.dirty?'warn':'');
+    return;
+  }
+  if(syncMeta.dirty)setCloudStatus('等待同步','warn');
+  else if(syncMeta.lastSyncedAt)setCloudStatus(`已同步 ${new Date(syncMeta.lastSyncedAt).toLocaleTimeString('zh-TW',{hour12:false})}`,'ok');
+  else setCloudStatus('Google 已連接','ok');
+}
+function toggleSyncPanel(){
+  const panel=$('sync-panel');
+  const willOpen=panel.style.display==='none';
+  panel.style.display=willOpen?'block':'none';
+  if(willOpen){
+    $('google-client-id').value=configuredGoogleClientId();
+    updateCloudIdleStatus();
+  }
+}
+function saveGoogleClientId(silent=false){
+  const input=$('google-client-id');
+  const value=input?.value.trim()||'';
+  if(!isValidGoogleClientId(value)){
+    if(!silent)alert('Client ID 格式不正確，應以 .apps.googleusercontent.com 結尾');
+    return false;
+  }
+  const previous=configuredGoogleClientId();
+  const bundled=(globalThis.TRPG_CONFIG?.googleClientId||'').trim();
+  if(value===bundled)localStorage.removeItem(GOOGLE_CLIENT_ID_KEY);
+  else localStorage.setItem(GOOGLE_CLIENT_ID_KEY,value);
+  if(previous&&previous!==value){
+    const deviceId=syncMeta.deviceId;
+    const dirty=syncMeta.dirty||hadStoredState;
+    syncMeta={...defaultSyncMeta(),deviceId,oauthClientId:value,dirty};
+    persistSyncMeta();
+  }
+  configureCloudClient();
+  updateCloudIdleStatus();
+  if(!silent)alert('Google Client ID 已儲存在這個瀏覽器');
+  return true;
+}
+async function ensureGoogleConnected(){
+  const inputValue=$('google-client-id')?.value.trim()||'';
+  if(inputValue&&inputValue!==configuredGoogleClientId()&&!saveGoogleClientId(true))throw new Error('Google Client ID 格式不正確');
+  const client=configureCloudClient();
+  if(!client?.configured)throw new Error('請先設定 Google OAuth Client ID');
+  if(client.connected)return client;
+  setCloudStatus('正在連接 Google…','warn','請在 Google 視窗選擇帳號並同意 Drive 應用程式資料權限。');
+  await client.authorize();
+  setCloudStatus('Google 已連接','ok','正在比對本機與雲端版本。');
+  return client;
+}
+function disconnectGoogleSync(){
+  cloudSyncClient?.disconnect();
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer=null;
+  updateCloudIdleStatus();
+}
+function markCloudDirty(){
+  if(!syncMeta)return;
+  if(!syncMeta.dirty){
+    syncMeta.dirty=true;
+    persistSyncMeta();
+  }
+  updateCloudIdleStatus();
+  scheduleCloudSync();
+}
+function scheduleCloudSync(delay=CLOUD_SYNC_DELAY_MS){
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer=null;
+  if(!cloudSyncClient?.connected||!syncMeta.dirty||syncMeta.conflict)return;
+  cloudSyncTimer=setTimeout(()=>{
+    cloudSyncTimer=null;
+    queueCloudSync();
+  },delay);
+}
+function cloudStateForUpload(){
+  const state=collectState();
+  state.entityImages={};
+  state.log=Array.isArray(state.log)?state.log.slice(0,2000):[];
+  return state;
+}
+function buildCloudPayload(revision){
+  if(!syncMeta.campaignId)syncMeta.campaignId=eventId();
+  return {
+    app:'trpg-dm-calculator',
+    syncFormatVersion:1,
+    campaignId:syncMeta.campaignId,
+    revision,
+    parentRevision:Math.max(0,revision-1),
+    updatedAt:new Date().toISOString(),
+    updatedByDevice:syncMeta.deviceId,
+    state:cloudStateForUpload(),
+  };
+}
+async function uploadCloudState(remote=null){
+  const remoteRevision=Number(remote?.payload?.revision)||0;
+  const revision=remoteRevision+1;
+  const payload=buildCloudPayload(revision);
+  assertValidStateData(payload.state,'待上傳存檔');
+  const file=await cloudSyncClient.writeStateFile(payload,remote?.file?.id||'',remote?.etag||'');
+  syncMeta={
+    ...syncMeta,
+    campaignId:payload.campaignId,
+    fileId:file?.id||remote?.file?.id||syncMeta.fileId,
+    lastSyncedRevision:revision,
+    lastSyncedAt:new Date().toISOString(),
+    dirty:false,
+    conflict:false,
+  };
+  persistSyncMeta();
+  hadStoredState=true;
+  setCloudStatus(`已同步 ${new Date(syncMeta.lastSyncedAt).toLocaleTimeString('zh-TW',{hour12:false})}`,'ok',`已上傳雲端版本 ${revision}。`);
+  return payload;
+}
+async function applyCloudState(remote){
+  const payload=assertValidCloudPayload(remote.payload);
+  await flushSaveState();
+  if(hadStoredState)await storeBackup(collectState(),'下載 Google Drive 雲端版本前');
+  const nextState=JSON.parse(JSON.stringify(payload.state));
+  nextState.entityImages={...entityImages};
+  assertValidStateData(nextState,'雲端存檔');
+  applyState(nextState);
+  await idbPut(STATE_STORE,nextState,CURRENT_STATE_KEY);
+  renderAppState();
+  stateDirty=false;
+  hadStoredState=true;
+  syncMeta={
+    ...syncMeta,
+    campaignId:payload.campaignId,
+    fileId:remote.file.id,
+    lastSyncedRevision:payload.revision,
+    lastSyncedAt:new Date().toISOString(),
+    dirty:false,
+    conflict:false,
+  };
+  persistSyncMeta();
+  setCloudStatus(`已同步 ${new Date(syncMeta.lastSyncedAt).toLocaleTimeString('zh-TW',{hour12:false})}`,'ok',`已套用雲端版本 ${payload.revision}；本機圖片已保留。`);
+  return payload;
+}
+function flagCloudConflict(remoteRevision){
+  syncMeta.conflict=true;
+  persistSyncMeta();
+  setCloudStatus('雲端版本衝突','warn',`本機與雲端版本 ${remoteRevision} 都有變更；請明確選擇要下載或覆蓋。`);
+  return {conflict:true,remoteRevision};
+}
+async function reconcileCloudState(options={}){
+  if(!cloudSyncClient?.connected)throw Object.assign(new Error('Google 授權已過期，請重新連接'),{code:'AUTH_REQUIRED'});
+  await flushSaveState();
+  setCloudStatus('正在同步…','warn','正在讀取 Google Drive 雲端版本。');
+  const remote=await cloudSyncClient.readStateFile();
+  if(!remote)return uploadCloudState();
+  const payload=assertValidCloudPayload(remote.payload);
+  const remoteRevision=payload.revision;
+  if(options.forceDownload)return applyCloudState(remote);
+  if(options.forceUpload)return uploadCloudState(remote);
+  if(syncMeta.lastSyncedRevision===0){
+    if(hadStoredState||syncMeta.dirty)return flagCloudConflict(remoteRevision);
+    return applyCloudState(remote);
+  }
+  if(remoteRevision===syncMeta.lastSyncedRevision){
+    if(syncMeta.dirty)return uploadCloudState(remote);
+    syncMeta={...syncMeta,fileId:remote.file.id,campaignId:payload.campaignId,lastSyncedAt:new Date().toISOString(),conflict:false};
+    persistSyncMeta();
+    updateCloudIdleStatus();
+    return payload;
+  }
+  if(remoteRevision>syncMeta.lastSyncedRevision){
+    if(syncMeta.dirty)return flagCloudConflict(remoteRevision);
+    return applyCloudState(remote);
+  }
+  return flagCloudConflict(remoteRevision);
+}
+function handleCloudSyncError(error){
+  console.error('Google Drive sync failed',error);
+  if(error?.code==='AUTH_REQUIRED'||error?.status===401){
+    cloudSyncClient?.disconnect();
+    setCloudStatus('需要重新連接 Google','warn',error.message||'Google 授權已過期。');
+    return;
+  }
+  if(error?.status===412){
+    syncMeta.conflict=true;
+    persistSyncMeta();
+    setCloudStatus('雲端版本衝突','warn',error.message);
+    return;
+  }
+  setCloudStatus('雲端同步失敗','error',error?.message||String(error));
+}
+function queueCloudSync(options={}){
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer=null;
+  cloudSyncQueue=cloudSyncQueue.catch(()=>{}).then(()=>reconcileCloudState(options)).catch(error=>{
+    handleCloudSyncError(error);
+    return null;
+  });
+  return cloudSyncQueue;
+}
+async function connectGoogleSync(){
+  try{
+    await ensureGoogleConnected();
+    await queueCloudSync();
+  }catch(error){handleCloudSyncError(error);}
+}
+async function syncCloudNow(){
+  try{
+    await ensureGoogleConnected();
+    await queueCloudSync();
+  }catch(error){handleCloudSyncError(error);}
+}
+async function downloadCloudNow(){
+  if(!confirm('確定下載 Google Drive 雲端版本？\n目前本機狀態會先建立備份，裝置上的角色圖片會保留。'))return;
+  try{
+    await ensureGoogleConnected();
+    await queueCloudSync({forceDownload:true});
+  }catch(error){handleCloudSyncError(error);}
+}
+async function forceUploadCloud(){
+  if(!confirm('確定以這個裝置的資料覆蓋 Google Drive 雲端版本？\n其他裝置尚未同步的變更可能會遺失。'))return;
+  try{
+    await ensureGoogleConnected();
+    await queueCloudSync({forceUpload:true});
+  }catch(error){handleCloudSyncError(error);}
+}
+function initGoogleSync(){
+  const input=$('google-client-id');
+  if(input)input.value=configuredGoogleClientId();
+  configureCloudClient();
+  updateCloudIdleStatus();
+  globalThis.addEventListener('online',()=>scheduleCloudSync(0));
+}
+const AUDITED_INPUT_IDS=new Set([
+  'campaign-name',
+  'monk-cname','monk-hp','monk-maxhp','monk-parmor','monk-marmor','monk-spd','monk-ki-max',
+  'cleric-cname','cleric-hp','cleric-maxhp','cleric-parmor','cleric-marmor',
+  'ranger-cname','ranger-hp','ranger-maxhp','ranger-parmor','ranger-marmor',
+  'owl-name','owl-hp','owl-maxhp','owl-parmor','owl-marmor','owl-atk','owl-spd',
+  'assn1-cname','assn1-hp','assn1-maxhp','assn1-parmor','assn1-marmor',
+  'assn2-cname','assn2-hp','assn2-maxhp','assn2-parmor','assn2-marmor',
+  'mage-cname','mage-hp','mage-maxhp','mage-parmor','mage-marmor','mage-recovery',
+]);
+function installPersistenceListeners(){
+  document.addEventListener('focusin',event=>{
+    const control=event.target;
+    if(control.matches?.('input,select,textarea'))control.dataset.previousValue=control.value;
+  });
+  document.addEventListener('input',event=>{
+    if(event.target.matches?.('input:not([type=file]),select,textarea')&&!event.target.hasAttribute('data-no-save'))saveState();
+  });
+  document.addEventListener('change',event=>{
+    const control=event.target;
+    if(!AUDITED_INPUT_IDS.has(control.id))return;
+    const previous=control.dataset.previousValue??'';
+    if(previous===control.value)return;
+    const label=control.closest('div')?.querySelector('label')?.textContent?.trim()||control.id;
+    const isKiMax=control.id==='monk-ki-max';
+    addLog(`設定「${label}」：${previous||'空白'} → ${control.value||'空白'}`,isKiMax?'resource':'setting',{
+      field:control.id,previous,value:control.value,...(isKiMax?{resource:'ki'}:{})
+    });
+    control.dataset.previousValue=control.value;
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden'){
+      flushSaveState();
+      if(cloudSyncClient?.connected&&syncMeta.dirty&&!syncMeta.conflict)queueCloudSync();
+    }
+  });
+  setInterval(()=>createAutoBackup('定時自動備份'),AUTO_BACKUP_MS);
+}
+
+// ══════════════ INIT ══════════════
+function renderAppState(){
+  $('round-num').textContent=roundNum;
+  renderMonsters();
+  renderKi();
+  updCrystal();
+  renderClericSlots();
+  renderRangerSlots();
+  renderMageSlots();
+  ['monk','cleric','ranger','mage','assn1','assn2'].forEach(p=>updHP(p));
+  updOwlHP();
+  renderUndeads();
+  renderCombatNPCs();
+  PLAYERS.forEach(p=>renderSkills(p));
+  renderSkills('owl');
+  calcHeal();
+  PLAYERS.forEach(p=>{renderBuffs(p);renderTargets(p);});
+  renderPlayerImages();
+  if($('campaign-panel').style.display!=='none')renderSnapshotList();
+  if($('tab-log').style.display!=='none')renderLog();
+  refreshAll();
+}
+async function initApp(){
+  injectEls();
+  await loadState();
+  renderAppState();
+  appReady=true;
+  installPersistenceListeners();
+  initGoogleSync();
+  if(!lastBackupAt)await createAutoBackup('初始自動備份',true);
+  navigator.storage?.persist?.().catch(()=>{});
+}
+initApp();
+</script>
+</body>
+</html>
